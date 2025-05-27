@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rifa Online</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        /* Estilos personalizados */
+        .number-grid {
+            display: grid;
+            grid-template-columns: repeat(10, 1fr);
+            gap: 8px;
+        }
+        
+        .number-item {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .number-item:hover {
+            transform: scale(1.1);
+        }
+        
+        .number-item.selected {
+            background-color: #3b82f6;
+            color: white;
+            font-weight: bold;
+        }
+        
+        .number-item.sold {
+            background-color: #ef4444;
+            color: white;
+            cursor: not-allowed;
+        }
+        
+        .admin-panel {
+            display: none;
+        }
+        
+        .buyer-panel {
+            display: block;
+        }
+        
+        /* Animações */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal-content {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 8px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        
+        /* Responsividade */
+        @media (max-width: 768px) {
+            .number-grid {
+                grid-template-columns: repeat(5, 1fr);
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+    <!-- Barra de navegação -->
+    <nav class="bg-blue-600 text-white p-4 shadow-md">
+        <div class="container mx-auto flex justify-between items-center">
+            <h1 class="text-2xl font-bold">Rifa Online</h1>
+            <button id="admin-login-btn" class="bg-white text-blue-600 px-4 py-2 rounded-md font-medium hover:bg-gray-100 transition">
+                <i class="fas fa-lock mr-2"></i>Área do Administrador
+            </button>
+        </div>
+    </nav>
+
+    <!-- Painel do Comprador -->
+    <div id="buyer-panel" class="buyer-panel container mx-auto p-4">
+        <!-- Cabeçalho da Rifa -->
+        <div class="bg-white rounded-lg shadow-md p-6 mb-6 fade-in">
+            <h2 id="raffle-title" class="text-3xl font-bold text-blue-600 mb-2">Rifa Beneficente</h2>
+            <p id="raffle-description" class="text-gray-700 mb-4">Ajude nossa causa e concorra a prêmios incríveis!</p>
+            <div class="flex flex-wrap justify-between items-center">
+                <div>
+                    <p class="text-gray-600"><i class="fas fa-gift mr-2 text-blue-500"></i> <span id="raffle-prize">Prêmio: Smartphone Novo</span></p>
+                    <p class="text-gray-600"><i class="fas fa-ticket-alt mr-2 text-blue-500"></i> <span id="total-numbers">Total de números: 100</span></p>
+                </div>
+                <div>
+                    <p class="text-gray-600"><i class="fas fa-money-bill-wave mr-2 text-blue-500"></i> <span id="price-per-number">Valor por número: R$ 5,00</span></p>
+                    <p class="text-gray-600"><i class="fas fa-user-lock mr-2 text-blue-500"></i> <span id="max-per-person">Máximo por pessoa: 10 números</span></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Seleção de Números -->
+        <div class="bg-white rounded-lg shadow-md p-6 mb-6 fade-in">
+            <h3 class="text-xl font-semibold mb-4 text-gray-800">Escolha seus números</h3>
+            <div class="number-grid mb-6" id="numbers-grid">
+                <!-- Números serão gerados dinamicamente pelo JavaScript -->
+            </div>
+            
+            <div class="flex justify-between items-center mb-4">
+                <p class="text-gray-700">Selecionados: <span id="selected-count">0</span>/<span id="max-selection">10</span></p>
+                <button id="clear-selection" class="text-red-500 hover:text-red-700">
+                    <i class="fas fa-trash-alt mr-1"></i> Limpar seleção
+                </button>
+            </div>
+            
+            <div class="bg-blue-50 p-4 rounded-md mb-4">
+                <h4 class="font-medium text-blue-800 mb-2">Total da compra:</h4>
+                <p class="text-2xl font-bold text-blue-600">R$ <span id="total-price">0,00</span></p>
+            </div>
+            
+            <button id="add-to-cart" class="bg-blue-600 text-white px-6 py-3 rounded-md font-medium hover:bg-blue-700 transition w-full disabled:opacity-50" disabled>
+                <i class="fas fa-cart-plus mr-2"></i> Adicionar ao Carrinho
+            </button>
+        </div>
+
+        <!-- Carrinho de Compras -->
+        <div class="bg-white rounded-lg shadow-md p-6 mb-6 fade-in" id="cart-section">
+            <h3 class="text-xl font-semibold mb-4 text-gray-800">Seu Carrinho</h3>
+            
+            <div class="overflow-x-auto">
+                <table class="min-w-full bg-white">
+                    <thead>
+                        <tr class="bg-gray-100">
+                            <th class="py-2 px-4 text-left">Números</th>
+                            <th class="py-2 px-4 text-right">Valor</th>
+                            <th class="py-2 px-4 text-right">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="cart-items">
+                        <!-- Itens do carrinho serão adicionados aqui -->
+                    </tbody>
+                    <tfoot>
+                        <tr class="border-t">
+                            <td class="py-2 px-4 font-semibold text-right" colspan="2">Total:</td>
+                            <td class="py-2 px-4 font-bold text-right">R$ <span id="cart-total">0,00</span></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+            
+            <div class="mt-6">
+                <h4 class="font-medium text-gray-800 mb-2">Informações do Comprador</h4>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label for="buyer-name" class="block text-gray-700 mb-1">Nome Completo*</label>
+                        <input type="text" id="buyer-name" class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                    </div>
+                    <div>
+                        <label for="buyer-name" class="block text-gray-700 mb-1">CPF*</label>
+                        <input type="text" id="buyer-name" class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                    </div>
+                    <div>
+                        <label for="buyer-phone" class="block text-gray-700 mb-1">Telefone*</label>
+                        <input type="tel" id="buyer-phone" class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                    </div>
+                </div>
+                <div class="mb-4">
+                    <label for="buyer-email" class="block text-gray-700 mb-1">E-mail</label>
+                    <input type="email" id="buyer-email" class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                
+                <div class="flex items-center mb-4">
+                    <input type="checkbox" id="agree-terms" class="mr-2">
+                    <label for="agree-terms" class="text-gray-700">Li e concordo com os termos e condições da rifa</label>
+                </div>
+                
+                <button id="checkout-btn" class="bg-green-600 text-white px-6 py-3 rounded-md font-medium hover:bg-green-700 transition w-full disabled:opacity-50" disabled>
+                    <i class="fas fa-credit-card mr-2"></i> Finalizar Compra
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Painel do Administrador -->
+    <div id="admin-panel" class="admin-panel container mx-auto p-4">
+        <!-- Modal de Login -->
+        <div id="login-modal" class="modal">
+            <div class="modal-content">
+                <h2 class="text-2xl font-bold text-gray-800 mb-4">Login do Administrador</h2>
+                <div class="mb-4">
+                    <label for="admin-username" class="block text-gray-700 mb-1">Usuário</label>
+                    <input type="text" id="admin-username" class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div class="mb-6">
+                    <label for="admin-password" class="block text-gray-700 mb-1">Senha</label>
+                    <input type="password" id="admin-password" class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div class="flex justify-end">
+                    <button id="cancel-login" class="bg-gray-300 text-gray-800 px-4 py-2 rounded-md mr-2 hover:bg-gray-400">Cancelar</button>
+                    <button id="confirm-login" class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">Entrar</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Conteúdo do Admin após login -->
+        <div id="admin-content" class="hidden">
+            <!-- Cabeçalho -->
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-gray-800">Painel de Controle</h2>
+                <button id="logout-btn" class="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600">
+                    <i class="fas fa-sign-out-alt mr-1"></i> Sair
+                </button>
+            </div>
+
+            <!-- Abas -->
+            <div class="flex border-b mb-6">
+                <button class="admin-tab active px-4 py-2 font-medium text-blue-600 border-b-2 border-blue-600" data-tab="config">Configurações</button>
+                <button class="admin-tab px-4 py-2 font-medium text-gray-600 hover:text-blue-600" data-tab="sales">Vendas</button>
+                <button class="admin-tab px-4 py-2 font-medium text-gray-600 hover:text-blue-600" data-tab="draw">Sortear</button>
+            </div>
+
+            <!-- Conteúdo das Abas -->
+            <div id="admin-tab-content">
+                <!-- Configurações -->
+                <div id="config-tab" class="admin-tab-panel active">
+                    <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+                        <h3 class="text-xl font-semibold mb-4 text-gray-800">Configurações da Rifa</h3>
+
+                        <div class="flex flex-col lg:flex-row gap-6 mb-6">
+                            <!-- Coluna dos Campos -->
+                            <div class="flex-1 space-y-4">
+                              <div>
+                                <label for="banner" class="block text-sm font-medium text-gray-700 mb-1">
+                                  Banner da Rifa
+                                </label>
+                                <input type="file" id="banner" name="banner" accept="image/*"
+                                  class="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                <p class="mt-1 text-xs text-gray-500">Escolha uma imagem para o banner. Formatos aceitos: JPG, PNG.</p>
+                              </div>
+                            </div>
+                          
+                            <!-- Coluna da Imagem -->
+                            <div class="w-full lg:w-1/2">
+                              <p class="text-sm font-semibold mb-2">Pré-visualização:</p>
+                              <div class="w-full h-64 border border-dashed border-gray-300 rounded-lg flex items-center justify-center overflow-hidden bg-gray-100">
+                                <img id="banner-preview" src="#" alt="Pré-visualização do banner"
+                                  class="max-w-full max-h-full object-cover hidden" />
+                                <span id="placeholder-text" class="text-gray-400 text-sm">Nenhuma imagem selecionada</span>
+                              </div>
+                            </div>
+                          </div>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label for="raffle-title-input" class="block text-gray-700 mb-1">Título da Rifa</label>
+                                <input type="text" id="raffle-title-input" class="w-full p-2 border border-gray-300 rounded-md mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                
+                                <label for="raffle-description-input" class="block text-gray-700 mb-1">Descrição</label>
+                                <textarea id="raffle-description-input" rows="3" class="w-full p-2 border border-gray-300 rounded-md mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+                                
+                                <label for="raffle-prize-input" class="block text-gray-700 mb-1">Prêmio</label>
+                                <input type="text" id="raffle-prize-input" class="w-full p-2 border border-gray-300 rounded-md mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+                            
+                            <div>
+                                <label for="total-numbers-input" class="block text-gray-700 mb-1">Total de Números</label>
+                                <input type="number" id="total-numbers-input" class="w-full p-2 border border-gray-300 rounded-md mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                
+                                <label for="price-per-number-input" class="block text-gray-700 mb-1">Valor por Número (R$)</label>
+                                <input type="number" step="0.01" id="price-per-number-input" class="w-full p-2 border border-gray-300 rounded-md mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                
+                                <label for="max-per-person-input" class="block text-gray-700 mb-1">Máximo por Pessoa</label>
+                                <input type="number" id="max-per-person-input" class="w-full p-2 border border-gray-300 rounded-md mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+                        </div>
+                        
+                        <button id="save-settings" class="bg-blue-600 text-white px-6 py-2 rounded-md font-medium hover:bg-blue-700 transition mt-4">
+                            <i class="fas fa-save mr-2"></i> Salvar Configurações
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Vendas -->
+                <div id="sales-tab" class="admin-tab-panel hidden">
+                    <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+                        <h3 class="text-xl font-semibold mb-4 text-gray-800">Vendas Realizadas</h3>
+                        
+                        <div class="flex justify-between items-center mb-4">
+                            <div class="relative">
+                                <input type="text" id="sales-search" placeholder="Buscar por nome..." class="p-2 pl-8 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <i class="fas fa-search absolute left-2 top-3 text-gray-400"></i>
+                            </div>
+                            <div>
+                                <label for="sales-filter" class="mr-2 text-gray-700">Filtrar:</label>
+                                <select id="sales-filter" class="p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    <option value="all">Todos</option>
+                                    <option value="paid">Pagos</option>
+                                    <option value="pending">Pendentes</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full bg-white">
+                                <thead>
+                                    <tr class="bg-gray-100">
+                                        <th class="py-2 px-4 text-left">Data</th>
+                                        <th class="py-2 px-4 text-left">Comprador</th>
+                                        <th class="py-2 px-4 text-left">Telefone</th>
+                                        <th class="py-2 px-4 text-left">Números</th>
+                                        <th class="py-2 px-4 text-right">Valor</th>
+                                        <th class="py-2 px-4 text-center">Status</th>
+                                        <th class="py-2 px-4 text-center">Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="sales-list">
+                                    <!-- Vendas serão listadas aqui -->
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <div class="mt-4 flex justify-between items-center">
+                            <div>
+                                <span id="sales-count">0</span> vendas encontradas
+                            </div>
+                            <div>
+                                <button id="export-sales" class="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700">
+                                    <i class="fas fa-file-export mr-1"></i> Exportar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sortear -->
+                <div id="draw-tab" class="admin-tab-panel hidden">
+                    <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+                        <h3 class="text-xl font-semibold mb-4 text-gray-800">Realizar Sorteio</h3>
+                        
+                        <div class="bg-blue-50 p-6 rounded-md text-center mb-6">
+                            <p class="text-gray-700 mb-4">Clique no botão abaixo para sortear o número vencedor</p>
+                            <button id="draw-button" class="bg-blue-600 text-white px-8 py-4 rounded-full font-bold text-xl hover:bg-blue-700 transition">
+                                <i class="fas fa-trophy mr-2"></i> REALIZAR SORTEIO
+                            </button>
+                        </div>
+                        
+                        <div id="winner-section" class="hidden bg-green-50 p-6 rounded-md text-center">
+                            <h4 class="text-2xl font-bold text-green-800 mb-2">PARABÉNS AO GANHADOR!</h4>
+                            <p class="text-gray-700 mb-1">Número sorteado: <span id="winner-number" class="font-bold text-3xl">00</span></p>
+                            <p class="text-gray-700 mb-4">Comprador: <span id="winner-name" class="font-bold">Nome do Ganhador</span></p>
+                            <p class="text-gray-700">Telefone: <span id="winner-phone" class="font-bold">(00) 00000-0000</span></p>
+                            
+                            <div class="mt-6">
+                                <button id="print-winner" class="bg-green-600 text-white px-4 py-2 rounded-md mr-2 hover:bg-green-700">
+                                    <i class="fas fa-print mr-1"></i> Imprimir
+                                </button>
+                                <button id="share-winner" class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">
+                                    <i class="fas fa-share-alt mr-1"></i> Compartilhar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Confirmação de Compra -->
+    <div id="checkout-modal" class="modal">
+        <div class="modal-content">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">Confirmação de Compra</h2>
+            <div class="mb-4">
+                <p class="text-gray-700 mb-2">Você está comprando os seguintes números:</p>
+                <div id="checkout-numbers" class="bg-gray-100 p-3 rounded-md mb-3"></div>
+                <p class="text-gray-700 font-bold text-lg">Total: R$ <span id="checkout-total">0,00</span></p>
+            </div>
+            
+            <div class="mb-6">
+                <p class="text-gray-700 mb-2">Forma de pagamento:</p>
+                <div class="grid grid-cols-2 gap-4">
+                    <button class="payment-method bg-blue-100 border border-blue-300 p-3 rounded-md hover:bg-blue-200" data-method="pix">
+                        <i class="fas fa-qrcode text-blue-600 mr-2"></i> Pix
+                    </button>
+                    <button class="payment-method bg-green-100 border border-green-300 p-3 rounded-md hover:bg-green-200" data-method="card">
+                        <i class="fas fa-credit-card text-green-600 mr-2"></i> Cartão
+                    </button>
+                </div>
+            </div>
+            
+            <div id="pix-instructions" class="hidden bg-blue-50 p-4 rounded-md mb-4">
+                <h4 class="font-bold text-blue-800 mb-2">Pagamento via Pix</h4>
+                <p class="text-gray-700 mb-2">1. Abra o aplicativo do seu banco</p>
+                <p class="text-gray-700 mb-2">2. Acesse a área Pix e escolha "Pagar com QR Code"</p>
+                <p class="text-gray-700 mb-2">3. Escaneie o código abaixo:</p>
+                <div class="bg-white p-4 rounded-md flex justify-center mb-2">
+                    <!-- QR Code placeholder - em produção seria gerado dinamicamente -->
+                    <div class="border-2 border-dashed border-gray-300 p-8 text-center">
+                        <i class="fas fa-qrcode text-4xl text-gray-400 mb-2"></i>
+                        <p class="text-gray-500">QR Code Pix</p>
+                    </div>
+                </div>
+                <p class="text-gray-700">Ou copie o código: <span class="font-mono bg-gray-200 px-2 py-1 rounded">00020126580014BR.GOV.BCB.PIX0136123e4567-e12b-12d1-a456-426655440000520400005303986540510.005802BR5913LOJAVIRTUAL6008BRASILIA62070503***6304A1B2</span></p>
+            </div>
+            
+            <div id="card-instructions" class="hidden bg-green-50 p-4 rounded-md mb-4">
+                <h4 class="font-bold text-green-800 mb-2">Pagamento com Cartão</h4>
+                <p class="text-gray-700 mb-2">Você será redirecionado para um ambiente seguro para informar os dados do cartão.</p>
+                <p class="text-gray-700">Taxa de processamento: R$ 0,99</p>
+            </div>
+            
+            <div class="flex justify-end">
+                <button id="cancel-checkout" class="bg-gray-300 text-gray-800 px-4 py-2 rounded-md mr-2 hover:bg-gray-400">Cancelar</button>
+                <button id="confirm-payment" class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 disabled:opacity-50" disabled>
+                    <i class="fas fa-check-circle mr-1"></i> Confirmar Pagamento
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Edição de Venda -->
+    <div id="edit-sale-modal" class="modal">
+        <div class="modal-content">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">Editar Venda</h2>
+            
+            <div class="mb-4">
+                <label for="edit-sale-name" class="block text-gray-700 mb-1">Nome do Comprador</label>
+                <input type="text" id="edit-sale-name" class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+            
+            <div class="mb-4">
+                <label for="edit-sale-phone" class="block text-gray-700 mb-1">Telefone</label>
+                <input type="tel" id="edit-sale-phone" class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+            
+            <div class="mb-4">
+                <label for="edit-sale-numbers" class="block text-gray-700 mb-1">Números Comprados</label>
+                <div id="edit-sale-numbers" class="flex flex-wrap gap-2 p-2 border border-gray-300 rounded-md min-h-12">
+                    <!-- Números serão adicionados aqui -->
+                </div>
+                <p class="text-sm text-gray-500 mt-1">Clique em um número para removê-lo</p>
+            </div>
+            
+            <div class="mb-4">
+                <label for="edit-sale-status" class="block text-gray-700 mb-1">Status</label>
+                <select id="edit-sale-status" class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="pending">Pendente</option>
+                    <option value="paid">Pago</option>
+                </select>
+            </div>
+            
+            <div class="flex justify-end">
+                <button id="cancel-edit-sale" class="bg-gray-300 text-gray-800 px-4 py-2 rounded-md mr-2 hover:bg-gray-400">Cancelar</button>
+                <button id="save-edit-sale" class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">
+                    <i class="fas fa-save mr-1"></i> Salvar
+                </button>
+            </div>
+        </div>
+    </div>
+    <script src="./script.js"></script>
+    <script src="./imagem.js"></script>
+</body>
+</html>
