@@ -1,0 +1,3 @@
+### Tecnologias usadas
+- ⚛️ React
+- 🤖 ChatGPT
