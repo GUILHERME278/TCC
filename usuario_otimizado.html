@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rifa Online</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="./css/usuario.css">
+</head>
+
+<body class="bg-gray-100 font-sans">
+    <!-- Barra de navegação - REDUZIDA -->
+    <nav class="etec-gradient text-white py-1 mb-2">
+        <div class="container mx-auto px-2">
+            <div class="flex flex-col md:flex-row justify-between items-center">
+                <img src="./img/2024_logo_55anos_cps_gov_24-25_regua_horizontal+horizontal_cor.png"
+                    alt="Logo Etec Dep. Salim Sedeh" class="h-8 mr-2">
+                <h1 class="text-lg font-bold text-center">Ação entre amigos</h1>
+                <div class="text-xs">
+                    <span class="hidden md:inline">Etec Deputado Salim Sedeh - Leme/SP</span>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Layout principal com três colunas - ALTURA REDUZIDA -->
+    <div class="flex flex-col lg:flex-row h-screen bg-gray-100" style="height: calc(100vh - 80px);">
+        <!-- Coluna esquerda - Sidebar REDUZIDA -->
+        <div class="lg:w-1/4 p-2 space-y-2">
+            <!-- Cabeçalho da Rifa REDUZIDO -->
+            <div class="bg-white rounded-lg shadow-md p-3 fade-in border-t-2 border-etec-blue max-w-sm flex-shrink-0">
+                <h2 id="raffle-title" class="text-lg font-bold text-blue-700 mb-1">Rifa Beneficente</h2>
+                <p id="raffle-description" class="text-gray-700 mb-2 text-sm">Ajude nossa causa e concorra a prêmios incríveis!</p>
+
+                <div class="grid grid-cols-1 gap-2 text-xs">
+                    <p class="text-gray-600 flex items-center">
+                        <i class="fas fa-gift mr-1 text-blue-500 w-4 text-center text-xs"></i>
+                        <span id="raffle-prize">Prêmio: Smartphone Novo</span>
+                    </p>
+                    <p class="text-gray-600 flex items-center">
+                        <i class="fas fa-ticket-alt mr-1 text-blue-500 w-4 text-center text-xs"></i>
+                        <span id="total-numbers">Total de números: 100</span>
+                    </p>
+                    <p class="text-gray-600 flex items-center">
+                        <i class="fas fa-money-bill-wave mr-1 text-green-500 w-4 text-center text-xs"></i>
+                        <span id="price-per-number">Valor por número: R$ 5,00</span>
+                    </p>
+                    <p class="text-gray-600 flex items-center">
+                        <i class="fas fa-user-lock mr-1 text-red-500 w-4 text-center text-xs"></i>
+                        <span id="max-per-person">Máximo por pessoa: 10 números</span>
+                    </p>
+                </div>
+            </div>
+
+            <!-- Container da imagem REDUZIDO -->
+            <div class="w-full h-40">
+                <img src="./img/carro-completo.jpeg" alt="Imagem da rifa"
+                    class="w-full h-full object-cover rounded-lg shadow-md" />
+            </div>
+        </div>
+
+        <!-- Área principal dividida em duas colunas -->
+        <div class="flex-1 p-2 flex gap-2 min-h-0">
+            <!-- Coluna Maior - Seleção de Números -->
+            <div class="flex-1 bg-white rounded-lg shadow-md p-4 fade-in border-t-2 border-etec-red flex flex-col">
+                <h3 class="text-lg font-semibold mb-3 text-gray-800">Escolha seus números da sorte</h3>
+                
+                <!-- Container de navegação e números -->
+                <div class="flex-1 flex flex-col items-center justify-center">
+                    <!-- Setas de navegação e grid de números -->
+                    <div class="flex items-center justify-center mb-4">
+                        <button class="arrow-button-small" id="prev-numbers">&lt;</button>
+                        <div class="number-grid-small mx-4" id="numbers-grid">
+                            <!-- Números serão gerados dinamicamente pelo JavaScript -->
+                        </div>
+                        <button class="arrow-button-small" id="next-numbers">&gt;</button>
+                    </div>
+                    
+                    <!-- Menu de navegação com dots -->
+                    <div class="menu-small mb-4">
+                        <!-- Dots serão gerados dinamicamente pelo JavaScript -->
+                    </div>
+                    
+                    <!-- Botão limpar seleção -->
+                    <div class="flex justify-center">
+                        
+                    </div>
+                </div>
+            </div>
+
+            <!-- Coluna Menor - Informações de Compra -->
+            <div class="w-80 bg-white rounded-lg shadow-md p-4 fade-in border-t-2 border-green-500 flex flex-col justify-between">
+                <div>
+                    <h4 class="text-lg font-semibold mb-4 text-gray-800 text-center">Sua Seleção</h4>
+                    
+                    <!-- Valor total da seleção -->
+                    <div class="bg-blue-50 border border-blue-200 p-4 rounded-md mb-4 text-center">
+                        <h5 class="font-medium text-blue-800 mb-2 text-sm">Valor total:</h5>
+                        <p class="text-2xl font-bold text-blue-600">R$ <span id="total-price">0,00</span></p>
+                    </div>
+                </div>
+
+                <button id="clear-selection"
+                            class="text-red-600 hover:text-red-800 disabled:opacity-50 disabled:cursor-not-allowed font-medium flex items-center gap-2 text-sm px-4 py-2 border border-red-300 rounded-md hover:bg-red-50 transition-colors"
+                            disabled>
+                            <i class="fas fa-trash-alt text-xs"></i> Limpar seleção
+                        </button>   
+
+                <!-- Botões de ação -->
+                <div class="space-y-3">
+                    <button id="add-to-cart"
+                        class="bg-blue-600 text-white px-4 py-3 rounded-md font-semibold hover:bg-blue-700 transition w-full disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm"
+                        disabled>
+                        <i class="fas fa-cart-plus"></i>
+                        Adicionar ao Carrinho
+                    </button>
+
+                    <button id="openModalButton"
+                        class="bg-red-600 text-white px-4 py-3 rounded-md font-semibold hover:bg-red-700 transition w-full flex items-center justify-center gap-2 text-sm">
+                        <i class="fas fa-shopping-cart"></i> 
+                        Ver Carrinho / Finalizar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tela Flutuante (Modal) do Carrinho e Checkout -->
+    <div id="modal"
+        class="fixed inset-0 bg-gray-900 bg-opacity-75 hidden flex justify-center items-center z-50 p-4 transition-opacity duration-300 ease-in-out">
+        <div class="bg-white p-6 rounded-lg shadow-xl w-full max-w-3xl max-h-[90vh] flex flex-col modal-content">
+            <!-- Cabeçalho da Modal -->
+            <div class="flex justify-between items-center border-b pb-3 mb-4">
+                <h2 class="text-2xl font-semibold text-gray-800">Carrinho e Finalização</h2>
+                <button id="closeModalButton"
+                    class="text-gray-500 hover:text-red-600 text-2xl font-bold focus:outline-none">
+                    &times; <!-- Botão de fechar "X" -->
+                </button>
+            </div>
+
+            <!-- Conteúdo da Modal (Scrollable) -->
+            <div class="flex-grow overflow-y-auto pr-2">
+                <!-- Seção do Carrinho de Compras -->
+                <div class="mb-6" id="cart-section">
+                    <h3 class="text-xl font-semibold mb-4 text-gray-700">Seu Carrinho</h3>
+                    <div class="overflow-x-auto border rounded-lg">
+                        <table class="min-w-full bg-white divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th
+                                        class="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Números Selecionados</th>
+                                    <th
+                                        class="py-3 px-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Valor</th>
+                                    <th
+                                        class="py-3 px-4 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="cart-items" class="bg-white divide-y divide-gray-200">
+                                <!-- Linha de exemplo para carrinho vazio (será controlada pelo JS) -->
+                                <tr id="empty-cart-row" class="block">
+                                    <td colspan="3" class="py-4 px-4 text-center text-gray-500 italic">Seu carrinho está
+                                        vazio.</td>
+                                </tr>
+                                <!-- Itens do carrinho serão adicionados aqui pelo JS -->
+                            </tbody>
+                            <tfoot class="bg-gray-50">
+                                <tr class="border-t border-gray-300">
+                                    <td class="py-3 px-4 font-semibold text-right text-gray-700" colspan="2">Total do
+                                        Carrinho:</td>
+                                    <td class="py-3 px-4 font-bold text-right text-lg text-blue-700">R$ <span
+                                            id="cart-total">0,00</span></td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Seção do Formulário de Compra -->
+                <div class="mt-6 border-t pt-6">
+                    <h3 class="text-xl font-semibold mb-4 text-gray-700">Informações do Comprador</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <label for="buyer-name" class="block text-sm font-medium text-gray-700 mb-1">Nome Completo
+                                <span class="text-red-500">*</span></label>
+                            <input type="text" id="buyer-name" placeholder="Seu nome completo"
+                                class=" comprador w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                required>
+                        </div>
+                        <div>
+                            <label for="buyer-cpf" class="block text-sm font-medium text-gray-700 mb-1">CPF <span
+                                    class="text-red-500">*</span></label>
+                            <input type="text" id="buyer-cpf" maxlength="14" oninput="mascaraCPF(this)" placeholder="000.000.000-00"
+                                class=" comprador w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                required>
+                        </div>
+                        <div>
+                            <label for="buyer-phone" class="block text-sm font-medium text-gray-700 mb-1">Telefone
+                                (WhatsApp) <span class="text-red-500">*</span></label>
+                            <input type="tel" id="buyer-phone" maxlength="15" oninput="mascaraTelefone(this)" placeholder="(XX) XXXXX-XXXX"
+                                class=" comprador w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                required>
+                        </div>
+                        <div>
+                            <label for="buyer-email" type="email" class="block text-sm font-medium text-gray-700 mb-1">E-mail
+                                </label>
+                            <input type="email" id="buyer-email" placeholder="seuemail@exemplo.com"
+                                class=" comprador w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                    </div>
+
+                    <!-- Botão de Finalizar Compra -->
+                    <button id="checkout-btn"
+                        class="bg-green-600 text-white px-6 py-3 rounded-md font-semibold hover:bg-green-700 transition w-full disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-lg"
+                        disabled>
+                        <i class="fas fa-credit-card"></i> Finalizar Compra e Pagar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    
+
+      <script src="./js/usuario_otimizado.js"></script>
+</body>
+
+</html>
+

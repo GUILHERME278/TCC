@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Confirmação de Compra - Rifa Online</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f8fafc;
+        }
+        .container {
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+            color: white;
+            padding: 30px 20px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 28px;
+            font-weight: bold;
+        }
+        .header p {
+            margin: 10px 0 0 0;
+            opacity: 0.9;
+        }
+        .content {
+            padding: 30px 20px;
+        }
+        .success-icon {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .success-icon div {
+            display: inline-block;
+            width: 60px;
+            height: 60px;
+            background-color: #10b981;
+            border-radius: 50%;
+            line-height: 60px;
+            color: white;
+            font-size: 24px;
+        }
+        .details-box {
+            background-color: #f8fafc;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        .detail-row:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+        .detail-label {
+            font-weight: 600;
+            color: #4b5563;
+        }
+        .detail-value {
+            color: #1f2937;
+            font-weight: 500;
+        }
+        .numbers-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 10px;
+        }
+        .number-badge {
+            background-color: #3b82f6;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 14px;
+        }
+        .total-amount {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 18px;
+            font-weight: bold;
+            margin: 20px 0;
+        }
+        .draw-date {
+            background-color: #fef3c7;
+            border: 2px solid #f59e0b;
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+            margin: 20px 0;
+        }
+        .draw-date h3 {
+            margin: 0 0 5px 0;
+            color: #92400e;
+            font-size: 16px;
+        }
+        .draw-date p {
+            margin: 0;
+            color: #b45309;
+            font-weight: bold;
+            font-size: 18px;
+        }
+        .footer {
+            background-color: #f1f5f9;
+            padding: 20px;
+            text-align: center;
+            color: #64748b;
+            font-size: 14px;
+        }
+        .footer a {
+            color: #3b82f6;
+            text-decoration: none;
+        }
+        .social-links {
+            margin-top: 15px;
+        }
+        .social-links a {
+            display: inline-block;
+            margin: 0 10px;
+            color: #64748b;
+            font-size: 18px;
+            text-decoration: none;
+        }
+        @media (max-width: 600px) {
+            body {
+                padding: 10px;
+            }
+            .header {
+                padding: 20px 15px;
+            }
+            .header h1 {
+                font-size: 24px;
+            }
+            .content {
+                padding: 20px 15px;
+            }
+            .detail-row {
+                flex-direction: column;
+                gap: 5px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>🎫 Rifa Online</h1>
+            <p>Confirmação de Compra</p>
+        </div>
+
+        <!-- Content -->
+        <div class="content">
+            <!-- Success Icon -->
+            <div class="success-icon">
+                <div>✓</div>
+            </div>
+
+            <h2 style="text-align: center; color: #1f2937; margin-bottom: 10px;">
+                Parabéns, João Silva Santos!
+            </h2>
+            <p style="text-align: center; color: #6b7280; margin-bottom: 30px;">
+                Sua compra foi confirmada com sucesso. Boa sorte no sorteio!
+            </p>
+
+            <!-- Purchase Details -->
+            <div class="details-box">
+                <h3 style="margin-top: 0; color: #374151;">📋 Detalhes da Compra</h3>
+                
+                <div class="detail-row">
+                    <span class="detail-label">Números Comprados:</span>
+                    <div class="detail-value">
+                        <div class="numbers-grid">
+                            <span class="number-badge">07</span>
+                            <span class="number-badge">23</span>
+                            <span class="number-badge">45</span>
+                            <span class="number-badge">67</span>
+                            <span class="number-badge">89</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="detail-row">
+                    <span class="detail-label">Quantidade:</span>
+                    <span class="detail-value">5 números</span>
+                </div>
+
+                <div class="detail-row">
+                    <span class="detail-label">Valor por número:</span>
+                    <span class="detail-value">R$ 5,00</span>
+                </div>
+
+                <div class="detail-row">
+                    <span class="detail-label">Método de pagamento:</span>
+                    <span class="detail-value">Cartão de Crédito</span>
+                </div>
+
+                <div class="detail-row">
+                    <span class="detail-label">Data da compra:</span>
+                    <span class="detail-value">21/07/2025 às 14:30</span>
+                </div>
+            </div>
+
+            <!-- Total Amount -->
+            <div class="total-amount">
+                💰 Valor Total Pago: R$ 25,00
+            </div>
+
+            <!-- Draw Date -->
+            <div class="draw-date">
+                <h3>🗓️ Data do Sorteio</h3>
+                <p>15 de Janeiro de 2025</p>
+            </div>
+
+            <!-- Instructions -->
+            <div style="background-color: #eff6ff; border: 2px solid #3b82f6; border-radius: 8px; padding: 15px; margin: 20px 0;">
+                <h4 style="margin-top: 0; color: #1e40af;">📢 Importante:</h4>
+                <ul style="margin: 10px 0; padding-left: 20px; color: #1e3a8a;">
+                    <li>Guarde este e-mail como comprovante de participação</li>
+                    <li>O sorteio será realizado ao vivo em nossas redes sociais</li>
+                    <li>O ganhador será contatado pelos dados fornecidos</li>
+                    <li>Em caso de dúvidas, entre em contato conosco</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <p><strong>Rifa Online</strong> - Sistema de Rifas Digitais</p>
+            <p>📧 contato@rifaonline.com.br | 📱 (11) 99999-9999</p>
+            
+            <div class="social-links">
+                <a href="#">📘 Facebook</a>
+                <a href="#">📷 Instagram</a>
+                <a href="#">🐦 Twitter</a>
+            </div>
+            
+            <p style="margin-top: 15px; font-size: 12px;">
+                Este é um e-mail automático, não responda esta mensagem.<br>
+                Se você não fez esta compra, entre em contato conosco imediatamente.
+            </p>
+        </div>
+    </div>
+</body>
+</html>
+
