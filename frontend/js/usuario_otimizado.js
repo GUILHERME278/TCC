@@ -1,9 +1,11 @@
+
+
 // NOVA FUNCIONALIDADE: Configurações padrão da rifa (fallback)
 const defaultRaffleConfig = {
     title: "Rifa Beneficente",
     description: "Ajude nossa causa e concorra a prêmios incríveis!",
     prize: "Smartphone Novo",
-    totalNumbers: 2000,
+    totalNumbers: 1000,
     pricePerNumber: 5,
     maxPerPerson: 10,
     image: "./img/carro-completo.jpeg"
@@ -582,24 +584,61 @@ InputCpf.addEventListener("input", validarFormularioCompleto);
 InputPhone.addEventListener("input", validarFormularioCompleto);
 InputEmail.addEventListener("input", validarFormularioCompleto);
 
-// Event listener para o botão de finalizar compra
-EndCompra.addEventListener("click", () => {
-    if (validarFormularioCompleto()) {
-        const total = calcularTotalCarrinho();
-        const itensCarrinho = ListaDeItens.querySelectorAll("tr:not(#empty-cart-row)");
-        let todosOsNumeros = [];
-        
-        itensCarrinho.forEach(item => {
-            const numerosText = item.querySelector("td:first-child").textContent;
-            const numeros = numerosText.split(",").map(n => n.trim()).filter(n => n !== "");
-            todosOsNumeros = todosOsNumeros.concat(numeros);
+// NOVO: Event listener para o botão de finalizar compra com envio para o servidor
+EndCompra.addEventListener("click", async () => { // Adicionamos 'async' para usar 'await'
+    if (!validarFormularioCompleto()) {
+        return; // Se o formulário não for válido, interrompe a execução
+    }
+
+    // Desabilita o botão para evitar múltiplos cliques
+    EndCompra.disabled = true;
+    EndCompra.textContent = "Processando...";
+
+    const total = calcularTotalCarrinho();
+    const itensCarrinho = ListaDeItens.querySelectorAll("tr:not(#empty-cart-row)");
+    let todosOsNumeros = [];
+
+    itensCarrinho.forEach(item => {
+        const numerosText = item.querySelector("td:first-child").textContent;
+        const numeros = numerosText.split(",").map(n => n.trim()).filter(n => n !== "");
+        todosOsNumeros = todosOsNumeros.concat(numeros);
+    });
+
+    // Objeto com os dados a serem enviados
+    const dadosCompra = {
+        nome: inputNome.value,
+        cpf: InputCpf.value,
+        telefone: InputPhone.value,
+        email: InputEmail.value || "Não informado",
+        numeros: todosOsNumeros.join(", "),
+        total: total
+    };
+
+    try {
+        // Usando a API Fetch para enviar os dados para o teste.php
+        const response = await fetch('/TCC/backend/cadastro.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(dadosCompra),
         });
-        
-        alert(`Compra finalizada!\n        \nNome: ${inputNome.value}\nCPF: ${InputCpf.value}\nTelefone: ${InputPhone.value}\nEmail: ${InputEmail.value || "Não informado"}\n\nNúmeros comprados: ${todosOsNumeros.join(", ")}\nTotal de números: ${todosOsNumeros.length}\nValor total: R$ ${total.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}\n\nObrigado pela sua compra!`);
-        
-        limparCarrinho();
+
+      
+
+      
+    } catch (error) {
+        // Em caso de erro na comunicação com o servidor
+        console.error('Erro ao enviar dados:', error);
+        alert("Ocorreu um erro de comunicação. Tente novamente mais tarde.");
+    } finally {
+        // Reabilita o botão e restaura o texto original
+        EndCompra.disabled = false;
+        EndCompra.textContent = "Finalizar Compra";
+        validarFormularioCompleto(); // Revalida o estado do botão
     }
 });
+
 
 // Função para limpar o carrinho
 function limparCarrinho() {
@@ -681,3 +720,109 @@ if (document.readyState === "loading") {
     inicializar();
 }
 
+
+// Adicione estes event listeners junto com os outros listeners de modal
+openPurchasedNumbersModalBtn?.addEventListener("click", () => {
+    purchasedNumbersModal.classList.remove("hidden");
+    searchCPFInput.value = "";
+    purchasedNumbersResults.innerHTML = `
+        <div class="text-center text-gray-500 italic py-8">
+            Informe seu CPF para visualizar seus números comprados
+        </div>
+    `;
+});
+
+closePurchasedNumbersModalBtn?.addEventListener("click", () => {
+    purchasedNumbersModal.classList.add("hidden");
+});
+
+purchasedNumbersModal?.addEventListener("click", (e) => {
+    if (e.target === purchasedNumbersModal) purchasedNumbersModal.classList.add("hidden");
+});
+
+// Função para buscar números comprados
+async function fetchPurchasedNumbers(cpf) {
+    try {
+        purchasedNumbersResults.innerHTML = `
+            <div class="text-center py-8">
+                <i class="fas fa-spinner fa-spin text-purple-500 text-2xl mb-2"></i>
+                <p class="text-gray-600">Buscando seus números...</p>
+            </div>
+        `;
+
+        const response = await fetch('/BD/buscar_numeros.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ cpf: cpf.replace(/\D/g, '') })
+        });
+
+        const data = await response.json();
+
+        if (data.error) {
+            purchasedNumbersResults.innerHTML = `
+                <div class="text-center text-red-500 py-8">
+                    <i class="fas fa-exclamation-circle text-2xl mb-2"></i>
+                    <p>${data.error}</p>
+                </div>
+            `;
+        } else if (data.numeros && data.numeros.length > 0) {
+            let html = `
+                <div class="bg-purple-50 rounded-lg p-4 mb-4">
+                    <h3 class="font-semibold text-purple-800 mb-2">Cliente: ${data.nome}</h3>
+                    <p class="text-sm text-gray-600">CPF: ${data.cpf}</p>
+                </div>
+                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+            `;
+
+            data.numeros.forEach(numero => {
+                html += `
+                    <div class="bg-white border border-purple-200 rounded-md p-3 text-center font-bold text-purple-700 shadow-sm hover:bg-purple-50 transition">
+                        ${numero}
+                    </div>
+                `;
+            });
+
+            html += `</div>`;
+            purchasedNumbersResults.innerHTML = html;
+        } else {
+            purchasedNumbersResults.innerHTML = `
+                <div class="text-center text-gray-500 py-8">
+                    <i class="fas fa-info-circle text-2xl mb-2"></i>
+                    <p>Nenhum número comprado encontrado para este CPF.</p>
+                </div>
+            `;
+        }
+    } catch (error) {
+        console.error('Erro ao buscar números:', error);
+        purchasedNumbersResults.innerHTML = `
+            <div class="text-center text-red-500 py-8">
+                <i class="fas fa-exclamation-circle text-2xl mb-2"></i>
+                <p>Erro ao buscar números. Tente novamente mais tarde.</p>
+            </div>
+        `;
+    }
+}
+
+// Event listener para o botão de busca
+searchButton.addEventListener("click", () => {
+    const cpf = searchCPFInput.value.replace(/\D/g, '');
+    if (cpf.length === 11) {
+        fetchPurchasedNumbers(searchCPFInput.value);
+    } else {
+        purchasedNumbersResults.innerHTML = `
+            <div class="text-center text-red-500 py-8">
+                <i class="fas fa-exclamation-circle text-2xl mb-2"></i>
+                <p>Por favor, informe um CPF válido.</p>
+            </div>
+        `;
+    }
+});
+
+// Permitir busca ao pressionar Enter
+searchCPFInput.addEventListener("keypress", (e) => {
+    if (e.key === "Enter") {
+        searchButton.click();
+    }
+});
