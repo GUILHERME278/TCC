@@ -733,93 +733,98 @@ FecharComprados.addEventListener("click", () => {
 });
 
 
-(function () {
-  const searchBtn = document.getElementById('searchButton');
-  const cpfInput = document.getElementById('searchCPF');
-  const resultsContainer = document.getElementById('purchasedNumbersResults');
 
-  // Monta o HTML dos resultados
-  function renderNumeros(numeros, cpf) {
-    resultsContainer.innerHTML = '';
 
-    if (!numeros || numeros.length === 0) {
-      resultsContainer.innerHTML = `<div class="text-center text-gray-500 italic py-8">
-        Nenhum número encontrado para o CPF ${formatCPFDisplay(cpf)}.
-      </div>`;
-      return;
+// Funcionalidade de busca de números comprados por CPF
+const searchCPFInput = document.getElementById('searchCPF');
+const searchButton = document.getElementById('searchButton');
+const purchasedNumbersResults = document.getElementById('purchasedNumbersResults');
+
+searchButton.addEventListener('click', async () => {
+    const cpf = searchCPFInput.value.trim();
+
+    if (!cpf) {
+        purchasedNumbersResults.innerHTML = '<div class="text-center text-red-500 italic py-8">Por favor, digite um CPF.</div>';
+        return;
     }
 
-    const unique = Array.from(new Set(numeros.map(n => String(n).trim()))).filter(n => n !== '');
-    unique.sort((a,b) => {
-      const na = parseInt(a,10), nb = parseInt(b,10);
-      return (isNaN(na) || isNaN(nb)) ? a.localeCompare(b) : na - nb;
-    });
-
-    const header = document.createElement('div');
-    header.className = 'mb-2';
-    header.innerHTML = `<strong>${unique.length} número(s) encontrado(s) para ${formatCPFDisplay(cpf)}:</strong>`;
-    resultsContainer.appendChild(header);
-
-    const grid = document.createElement('div');
-    grid.className = 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2';
-    unique.forEach(n => {
-      const card = document.createElement('div');
-      card.className = 'p-2 border rounded text-center bg-gray-50';
-      card.textContent = n;
-      grid.appendChild(card);
-    });
-    resultsContainer.appendChild(grid);
-  }
-
-  function formatCPFDisplay(cpf) {
-    const s = String(cpf).replace(/\D/g,'').padEnd(11,'0').slice(0,11);
-    return s.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
-  }
-
-  // Clique no botão de busca
-  async function onSearchClick(e) {
-    e && e.preventDefault();
-    const raw = cpfInput.value || '';
-    const cpf = raw.replace(/\D/g, '');
-
-    if (cpf.length !== 11) {
-      resultsContainer.innerHTML = `<div class="text-center text-red-500 py-4">CPF inválido. Deve ter 11 dígitos.</div>`;
-      return;
-    }
-
-    resultsContainer.innerHTML = `<div class="text-center py-6">Buscando números...</div>`;
+    // Limpa resultados anteriores e mostra mensagem de carregamento
+    purchasedNumbersResults.innerHTML = '<div class="text-center text-gray-500 italic py-8"><i class="fas fa-spinner fa-spin mr-2"></i>Buscando números...</div>';
 
     try {
-      const resp = await fetch('/TCC/backend/controller/busca.php', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ cpf })
-      });
+        const response = await fetch('./BD/busca.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ cpf: cpf })
+        });
 
-      if (!resp.ok) throw new Error('Erro: ' + resp.status);
+        const data = await response.json();
 
-      const data = await resp.json();
-
-      if (!data.success) {
-        resultsContainer.innerHTML = `<div class="text-center text-red-500 py-4">${data.message || 'Erro ao buscar números.'}</div>`;
-        return;
-      }
-
-      renderNumeros(data.numeros || [], cpf);
-    } catch (err) {
-      console.error(err);
-      resultsContainer.innerHTML = `<div class="text-center text-red-500 py-4">Erro ao conectar com o servidor.</div>`;
+        if (data.success) {
+            if (data.numeros && data.numeros.length > 0) {
+                const numerosFormatados = data.numeros.map(num => `<span class="inline-block bg-blue-100 text-blue-800 text-sm font-semibold px-3 py-1 rounded-full m-1">${num}</span>`).join('');
+                purchasedNumbersResults.innerHTML = `
+                    <h4 class="text-lg font-semibold mb-2">Números encontrados para ${data.cpf}:</h4>
+                    <div class="flex flex-wrap justify-center p-4 border rounded-md bg-gray-50">
+                        ${numerosFormatados}
+                    </div>
+                `;
+            } else {
+                purchasedNumbersResults.innerHTML = '<div class="text-center text-gray-500 italic py-8">Nenhum número encontrado para o CPF informado.</div>';
+            }
+        } else {
+            purchasedNumbersResults.innerHTML = `<div class="text-center text-red-500 italic py-8">Erro: ${data.message || 'Não foi possível buscar os números.'}</div>`;
+        }
+    } catch (error) {
+        console.error('Erro ao buscar números:', error);
+        purchasedNumbersResults.innerHTML = '<div class="text-center text-red-500 italic py-8">Erro na comunicação com o servidor. Tente novamente mais tarde.</div>';
     }
-  }
+});
 
-  if (searchBtn) searchBtn.addEventListener('click', onSearchClick);
-  if (cpfInput) {
-    cpfInput.addEventListener('keydown', function (ev) {
-      if (ev.key === 'Enter') {
-        ev.preventDefault();
-        onSearchClick();
-      }
-    });
-  }
-})();
+// Abre e fecha o modal de números comprados
+const purchasedNumbersModal = document.getElementById('purchasedNumbersModal');
+const openPurchasedNumbersModalBtn = document.getElementById('openPurchasedNumbersModal');
+const closePurchasedNumbersModalBtn = document.getElementById('closePurchasedNumbersModal');
+
+openPurchasedNumbersModalBtn.addEventListener('click', () => {
+    purchasedNumbersModal.classList.remove('hidden');
+    purchasedNumbersModal.classList.add('flex');
+});
+
+closePurchasedNumbersModalBtn.addEventListener('click', () => {
+    purchasedNumbersModal.classList.add('hidden');
+    purchasedNumbersModal.classList.remove('flex');
+});
+
+// Fecha o modal ao clicar fora dele
+window.addEventListener('click', (event) => {
+    if (event.target === purchasedNumbersModal) {
+        purchasedNumbersModal.classList.add('hidden');
+        purchasedNumbersModal.classList.remove('flex');
+    }
+});
+
+// Máscara de CPF para o input de busca
+function mascaraCPF(input) {
+    let value = input.value.replace(/\D/g, ''); // Remove tudo que não é dígito
+    if (value.length > 11) {
+        value = value.substring(0, 11);
+    }
+    value = value.replace(/(\d{3})(\d)/, '$1.$2');
+    value = value.replace(/(\d{3})(\d)/, '$1.$2');
+    value = value.replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+    input.value = value;
+}
+
+// Aplica a máscara de CPF ao carregar a página, caso o input já tenha valor
+document.addEventListener('DOMContentLoaded', () => {
+    const searchCPFInput = document.getElementById('searchCPF');
+    if (searchCPFInput) {
+        mascaraCPF(searchCPFInput);
+    }
+});
+
+
 
