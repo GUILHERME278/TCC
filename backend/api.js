@@ -7,7 +7,7 @@ const app = express();
 app.use(express.json());
 
 const PORT = 3000;
-const SECRET_KEY = 'seu-segredo'; // Mantenha isso em segredo e considere usar variáveis de ambiente
+const SECRET_KEY = 'seu-segredo';
 
 // Configuração da conexão MySQL
 const dbConfig = {
