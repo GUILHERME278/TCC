@@ -1,57 +1,61 @@
 <?php
 header('Content-Type: application/json');
+mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 
 include 'conexão.php';
 
-// Recebe o corpo da requisição JSON
+// Recebe os dados enviados pelo front em JSON via POST
 $json_data = file_get_contents('php://input');
 $data = json_decode($json_data, true);
 
-// Verifica se os dados JSON foram recebidos e decodificados corretamente
-if (json_last_error() !== JSON_ERROR_NONE || !isset($data['nome'], $data['cpf'], $data['telefone'], $data['numeros'], $data['total'])) {
-    echo json_encode(['success' => false, 'message' => 'Dados inválidos recebidos.']);
+if (json_last_error() !== JSON_ERROR_NONE) {
+    echo json_encode(['success' => false, 'message' => 'JSON inválido.']);
     exit();
 }
 
-$nome = $data['nome'];
-$cpf = $data['cpf'];
-$telefone = $data['telefone'];
-$email = isset($data['email']) ? $data['email'] : 'Não informado';
-$numeros_comprados_str = $data['numeros'];
-$total = $data['total'];
+// Validação de campos obrigatórios
+if (!isset($data['nome'], $data['cpf'], $data['telefone'], $data['numeros'])) {
+    echo json_encode(['success' => false, 'message' => 'Campos obrigatórios faltando.']);
+    exit();
+}
 
-// Inicia uma transação para garantir a integridade dos dados
+$nome     = trim($data['nome']);
+$cpf      = preg_replace('/\D/', '', $data['cpf']); // apenas números
+$telefone = trim($data['telefone']);
+$email    = isset($data['email']) ? trim($data['email']) : null;
+$numeros_str = trim($data['numeros']); // string "1, 2, 3"
+$total    = isset($data['total']) ? $data['total'] : null;
+
+// Converte string de números em array, aceitando vírgulas com ou sem espaço
+$numeros_comprados = preg_split('/\s*,\s*/', $numeros_str, -1, PREG_SPLIT_NO_EMPTY);
+
 $conn->begin_transaction();
 
 try {
-    // 1. Insere o cliente na tabela 'clientes'
-    $stmt_cliente = $conn->prepare("INSERT INTO clientes (nome, cpf, telefone, email) VALUES (?, ?, ?, ?)");
-    $stmt_cliente->bind_param("ssss", $nome, $cpf, $telefone, $email);
+    // Insere cliente (ou atualiza caso já exista)
+    $stmt_cliente = $conn->prepare(
+        "INSERT INTO clientes (cpf, nome, telefone, email) VALUES (?, ?, ?, ?)
+         ON DUPLICATE KEY UPDATE nome = VALUES(nome), telefone = VALUES(telefone), email = VALUES(email)"
+    );
+    $stmt_cliente->bind_param("ssss", $cpf, $nome, $telefone, $email);
     $stmt_cliente->execute();
-    $cliente_id = $conn->insert_id;
     $stmt_cliente->close();
 
-    // 2. Insere os números comprados na tabela 'numeros_comprados'
-    $numeros_array = array_map('intval', explode(', ', $numeros_comprados_str));
-    
-    $stmt_numero = $conn->prepare("INSERT INTO numeros_comprados (cliente_id, numero) VALUES (?, ?)");
-    foreach ($numeros_array as $numero) {
-        $stmt_numero->bind_param("ii", $cliente_id, $numero);
+    // Insere os números vinculando ao CPF
+    $stmt_numero = $conn->prepare("INSERT INTO numeros (numero, cpf_cliente) VALUES (?, ?)");
+    foreach ($numeros_comprados as $numero) {
+        $numero = trim($numero);
+        if ($numero === '') continue;
+        $stmt_numero->bind_param("ss", $numero, $cpf);
         $stmt_numero->execute();
     }
     $stmt_numero->close();
 
-    // Confirma a transação
     $conn->commit();
-    echo json_encode(['success' => true, 'message' => 'Compra registrada com sucesso!']);
-
+    echo json_encode(['success' => true, 'message' => 'Cadastro realizado com sucesso.']);
 } catch (mysqli_sql_exception $e) {
-    // Em caso de erro, reverte a transação
     $conn->rollback();
-    echo json_encode(['success' => false, 'message' => 'Erro ao registrar a compra: ' . $e->getMessage()]);
+    echo json_encode(['success' => false, 'message' => 'Erro no cadastro: ' . $e->getMessage()]);
 } finally {
     $conn->close();
 }
-
-?>
-
