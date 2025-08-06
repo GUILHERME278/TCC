@@ -2,12 +2,13 @@ import express from 'express';
 import mysql from 'mysql2/promise';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
+import dotenv from 'dotenv';
 
 const app = express();
 app.use(express.json());
 
 const PORT = 3000;
-const SECRET_KEY = 'seu-segredo';
+process.env.DATABASE_KEY;
 
 // Configuração da conexão MySQL
 const dbConfig = {
