@@ -752,7 +752,7 @@ searchButton.addEventListener('click', async () => {
     purchasedNumbersResults.innerHTML = '<div class="text-center text-gray-500 italic py-8"><i class="fas fa-spinner fa-spin mr-2"></i>Buscando números...</div>';
 
     try {
-        const response = await fetch('./BD/busca.php', {
+        const response = await fetch('/TCC/backend/controller/busca.php', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -826,5 +826,73 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
+
+
+
+
+
+// NOVA FUNCIONALIDADE: Elementos para a busca por CPF
+const InputCpfBusca = document.getElementById("search-cpf-input");
+const BotaoBusca = document.getElementById("search-cpf-button");
+const ResultadoBusca = document.getElementById("search-results");
+
+// Função para buscar números por CPF
+async function buscarNumerosPorCpf() {
+    const cpf = InputCpfBusca.value.trim();
+
+    if (!cpf) {
+        alert("Por favor, digite um CPF para buscar.");
+        return;
+    }
+
+    // Normaliza o CPF (remove caracteres não numéricos)
+    const cpfLimpo = cpf.replace(/\D/g, "");
+
+    if (cpfLimpo.length !== 11) {
+        alert("CPF inválido. O CPF deve conter 11 dígitos.");
+        return;
+    }
+
+    ResultadoBusca.innerHTML = "Buscando...";
+
+    try {
+        const response = await fetch("busca.php", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ cpf: cpfLimpo }),
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            if (data.numeros && data.numeros.length > 0) {
+                ResultadoBusca.innerHTML = `Números encontrados para o CPF ${data.cpf}: <strong>${data.numeros.join(", ")}</strong>`;
+            } else {
+                ResultadoBusca.innerHTML = `Nenhum número encontrado para o CPF ${data.cpf}.`;
+            }
+        } else {
+            ResultadoBusca.innerHTML = `Erro na busca: ${data.message || "Ocorreu um erro desconhecido."}`; 
+        }
+    } catch (error) {
+        console.error("Erro ao buscar números:", error);
+        ResultadoBusca.innerHTML = "Erro ao conectar com o servidor de busca.";
+    }
+}
+
+// Event Listener para o botão de busca
+if (BotaoBusca) {
+    BotaoBusca.addEventListener("click", buscarNumerosPorCpf);
+}
+
+// Event Listener para permitir busca ao pressionar Enter no campo CPF
+if (InputCpfBusca) {
+    InputCpfBusca.addEventListener("keypress", (e) => {
+        if (e.key === "Enter") {
+            buscarNumerosPorCpf();
+        }
+    });
+}
 
 
