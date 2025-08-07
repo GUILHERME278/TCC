@@ -431,3 +431,10 @@ footer {
     display: none;
 }
 
+.number-item.sold {
+    background-color: #9e1b32 !important; /* Cor vermelha para indicar que está vendido */
+    color: white;
+    cursor: not-allowed; /* Muda o cursor para indicar que não é clicável */
+    text-decoration: line-through; /* Opcional: risca o número */
+}
+

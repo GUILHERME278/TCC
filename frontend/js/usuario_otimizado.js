@@ -335,7 +335,7 @@ function renderizarPagina(pagina) {
 
         setTimeout(() => {
             restaurarSelecaoNaPagina();
-            
+            atualizarNumerosComprados();
             PainelNumero.style.opacity = "1";
             PainelNumero.style.transform = "translateY(0)";
         }, 50);
@@ -624,9 +624,20 @@ EndCompra.addEventListener("click", async () => { // Adicionamos 'async' para us
             body: JSON.stringify(dadosCompra),
         });
 
-      
+        const result = await response.json(); // Supondo que o cadastro.php retorne JSON
 
-      
+        if (result.success) { // Verifica se o cadastro foi bem-sucedido
+            alert("Compra realizada com sucesso!");
+            limparCarrinho(); // Limpa o formulário e o carrinho
+
+            // >>> ADICIONE A CHAMADA AQUI <<<
+            // Atualiza a interface para desabilitar os números recém-comprados
+            await atualizarNumerosComprados(); 
+
+        } else {
+            alert("Erro ao finalizar a compra: " + (result.message || "Tente novamente."));
+        }
+
     } catch (error) {
         // Em caso de erro na comunicação com o servidor
         console.error('Erro ao enviar dados:', error);
@@ -711,6 +722,8 @@ function inicializar() {
     
     // Valida o formulário inicialmente
     validarFormularioCompleto();
+
+     atualizarNumerosComprados();
 }
 
 // Executa a inicialização quando o DOM estiver carregado
@@ -894,5 +907,40 @@ if (InputCpfBusca) {
         }
     });
 }
+
+// NOVA FUNÇÃO: Busca números já comprados e os desabilita na interface
+async function atualizarNumerosComprados() {
+    try {
+        // Faz a requisição para o novo script PHP
+        const response = await fetch('/TCC/backend/controller/BuscarComprados.php');
+        const data = await response.json();
+
+        if (data.success && data.numeros) {
+            // Converte a lista de números para um Set para busca rápida
+            const numerosVendidos = new Set(data.numeros.map(n => parseInt(n)));
+
+            // Seleciona todos os itens de número visíveis na tela
+            const todosOsNumerosVisiveis = document.querySelectorAll(".number-item");
+
+            todosOsNumerosVisiveis.forEach(elemento => {
+                const numero = parseInt(elemento.textContent);
+
+                // Verifica se o número está na lista de vendidos
+                if (numerosVendidos.has(numero)) {
+                    elemento.classList.add("sold"); // Aplica a classe para desabilitar
+                    elemento.classList.remove("selected"); // Garante que não fique selecionado
+                    elemento.title = "Este número já foi comprado"; // Adiciona uma dica
+                } else {
+                    // Garante que números que não estão vendidos não tenham a classe
+                    elemento.classList.remove("sold");
+                    elemento.title = ""; // Limpa a dica
+                }
+            });
+        }
+    } catch (error) {
+        console.error('Erro ao buscar ou atualizar números comprados:', error);
+    }
+}
+
 
 
