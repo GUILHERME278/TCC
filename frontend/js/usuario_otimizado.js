@@ -31,6 +31,15 @@ let TOTAL_NUMEROS;
 let MAX_POR_PESSOA;
 let TOTAL_PAGINAS;
 let paginaAtual = 0;
+// ... (outras variáveis globais) ...
+
+// Array para armazenar números selecionados globalmente
+let numerosSelecionados = new Set();
+
+// >>> ADICIONE ESTA NOVA VARIÁVEL <<<
+// Set para rastrear todos os números que já estão no carrinho
+let numerosNoCarrinho = new Set(); 
+
 
 // NOVA FUNCIONALIDADE: Variável para armazenar a configuração atual (para comparação)
 let configAtualCache = null;
@@ -205,7 +214,7 @@ const NUMEROS_POR_PAGINA = 100;
 const menuDots = document.querySelector(".menu") || document.querySelector(".menu-small");
 
 // Array para armazenar números selecionados globalmente
-let numerosSelecionados = new Set();
+let numerosselecionados = new Set();
 
 // Função para salvar seleção atual antes de trocar de página
 function salvarSelecaoAtual() {
@@ -311,6 +320,13 @@ function renderizarPagina(pagina) {
             numero.textContent = i;
 
             numero.addEventListener("click", () => {
+                // Verificação de segurança: se o número está vendido, não faz nada.
+                if (numero.classList.contains("sold") || numero.classList.contains("in-cart")) {
+                    numero.classList.add('shake-animation');
+                    setTimeout(() => numero.classList.remove('shake-animation'), 400);
+                    return; 
+                }
+                
                 const numeroValue = parseInt(numero.textContent);
                 
                 if (!numero.classList.contains("selected") && numerosSelecionados.size >= MAX_POR_PESSOA) {
@@ -318,12 +334,14 @@ function renderizarPagina(pagina) {
                     return;
                 }
                 
+                // Alterna a seleção
+                numero.classList.toggle("selected");
+
+                // Atualiza o Set de seleção global
                 if (numero.classList.contains("selected")) {
-                    numero.classList.remove("selected");
-                    numerosSelecionados.delete(numeroValue);
-                } else {
-                    numero.classList.add("selected");
                     numerosSelecionados.add(numeroValue);
+                } else {
+                    numerosSelecionados.delete(numeroValue);
                 }
                 
                 atualizarEstadoBotoes();
@@ -333,15 +351,25 @@ function renderizarPagina(pagina) {
             PainelNumero.appendChild(numero);
         }
 
-        setTimeout(() => {
+        // >>> ORDEM DE EXECUÇÃO CORRIGIDA <<<
+        setTimeout(async () => {
+            // 1. PRIMEIRO, busca e marca todos os números vendidos
+            await atualizarNumerosComprados(); 
+
+            atualizarStatusNoCarrinho();
+            
+            // 2. DEPOIS, restaura a seleção dos números que sobraram (disponíveis)
             restaurarSelecaoNaPagina();
-            atualizarNumerosComprados();
+            
+            // 3. Finalmente, mostra o painel atualizado
             PainelNumero.style.opacity = "1";
             PainelNumero.style.transform = "translateY(0)";
         }, 50);
         
     }, 150);
 }
+
+
 
 // Atualiza o estado das setas
 function atualizarSetas() {
@@ -458,6 +486,7 @@ botao.addEventListener("click", () => {
     const MsgCarrinhoVazio = document.getElementById("empty-cart-row");
     
     const NumbersArray = Array.from(numerosSelecionados).sort((a, b) => a - b);
+    NumbersArray.forEach(num => numerosNoCarrinho.add(parseInt(num)))
 
     if (NumbersArray.length > 0) {
         MsgCarrinhoVazio.classList.add("hidden");
@@ -491,6 +520,13 @@ botao.addEventListener("click", () => {
     ListaDeItens.appendChild(LinhaLista);
 
     icon.addEventListener("click", () => {
+
+        const numerosParaRemover = LinhaLista.querySelector("td:first-child").textContent.split(",").map(n => parseInt(n.trim()));
+        
+        // Remove esses números do Set de controle do carrinho
+        numerosParaRemover.forEach(num => numerosNoCarrinho.delete(num));
+
+        LinhaLista.remove();
         LinhaLista.remove();
         
         const itensRestantes = ListaDeItens.querySelectorAll("tr:not(#empty-cart-row)");
@@ -500,12 +536,16 @@ botao.addEventListener("click", () => {
         
         calcularTotalCarrinho();
         validarFormularioCompleto();
+
+        atualizarStatusNoCarrinho();
     });
 
     numerosSelecionados.clear();
     
     document.querySelectorAll(".number-item.selected").forEach(elemento => {
         elemento.classList.remove("selected");
+
+        atualizarStatusNoCarrinho();
     });
     
     atualizarEstadoBotoes();
@@ -665,6 +705,7 @@ function limparCarrinho() {
     InputPhone.value = "";
     InputEmail.value = "";
     
+    numerosNoCarrinho.clear();
     calcularTotalCarrinho();
     validarFormularioCompleto();
     
@@ -941,6 +982,25 @@ async function atualizarNumerosComprados() {
         console.error('Erro ao buscar ou atualizar números comprados:', error);
     }
 }
+
+// >>> ADICIONE ESTA NOVA FUNÇÃO <<<
+// Função para marcar os números que já estão no carrinho como desabilitados
+function atualizarStatusNoCarrinho() {
+    const todosOsNumerosVisiveis = document.querySelectorAll(".number-item");
+
+    todosOsNumerosVisiveis.forEach(elemento => {
+        const numero = parseInt(elemento.textContent);
+
+        if (numerosNoCarrinho.has(numero)) {
+            elemento.classList.add("in-cart");
+            elemento.title = "Este número já está no seu carrinho";
+        } else {
+            // Garante que a classe seja removida se o item for removido do carrinho
+            elemento.classList.remove("in-cart");
+        }
+    });
+}
+
 
 
 

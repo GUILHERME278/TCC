@@ -438,3 +438,35 @@ footer {
     text-decoration: line-through; /* Opcional: risca o número */
 }
 
+/* Animação de tremor para feedback de clique em número vendido */
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-3px); }
+    50% { transform: translateX(3px); }
+    75% { transform: translateX(-3px); }
+  }
+  
+  .shake-animation {
+    animation: shake 0.4s ease-in-out;
+  }
+  
+
+  /* ... (outros estilos .number-item) ... */
+
+/* >>> ADICIONE ESTA NOVA CLASSE <<< */
+/* Estilo para números que já estão no carrinho do usuário */
+.number-item.in-cart {
+    background-color: #6c757d !important; /* Cinza neutro */
+    color: white;
+    cursor: not-allowed; /* Cursor indica que não é clicável */
+    border: 2px solid #5a6268; /* Borda para destaque */
+}
+
+.number-item.sold {
+    background-color: #9e1b32 !important; /* Vermelho para vendido */
+    color: white;
+    cursor: not-allowed;
+    text-decoration: line-through;
+}
+
+/* ... (resto do seu CSS) ... */
