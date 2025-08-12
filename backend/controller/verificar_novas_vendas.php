@@ -30,8 +30,9 @@ if ($is_initial_fetch) {
 if ($deve_buscar_dados) {
     $sql_busca = "
         SELECT 
-            c.cpf, c.nome, c.telefone,
-            GROUP_CONCAT(n.numero ORDER BY CAST(n.numero AS UNSIGNED) ASC SEPARATOR ',') AS numeros_comprados
+            c.cpf, c.nome, c.email, c.telefone,
+            GROUP_CONCAT(n.numero ORDER BY CAST(n.numero AS UNSIGNED) ASC SEPARATOR ',') AS numeros_comprados,
+            COUNT(n.numero) as total_numeros
         FROM 
             clientes c
         LEFT JOIN 
@@ -39,7 +40,7 @@ if ($deve_buscar_dados) {
         WHERE
             n.numero IS NOT NULL
         GROUP BY 
-            c.cpf, c.nome, c.telefone
+            c.cpf, c.nome, c.email, c.telefone
         ORDER BY
             c.nome ASC;
     ";
@@ -48,11 +49,15 @@ if ($deve_buscar_dados) {
     $vendas = [];
     while ($row = mysqli_fetch_assoc($resultado_busca)) {
         $vendas[] = [
-            'id'      => $row['cpf'],
-            'name'    => $row['nome'],
-            'phone'   => $row['telefone'],
-            'numbers' => $row['numeros_comprados'] ? explode(',', $row['numeros_comprados']) : [],
-            'status'  => 'pending'
+            'id'           => $row['cpf'],
+            'cpf'          => $row['cpf'],
+            'name'         => $row['nome'],
+            'email'        => $row['email'] ? $row['email'] : 'Não informado',
+            'phone'        => $row['telefone'],
+            'numbers'      => $row['numeros_comprados'] ? explode(',', $row['numeros_comprados']) : [],
+            'total_numbers' => (int)$row['total_numeros'],
+            'status'       => 'pendente', // Status padrão, pode ser alterado conforme regra de negócio
+            'date'         => date('d/m/Y') // Data atual como padrão
         ];
     }
     // Envia a lista completa de vendas
