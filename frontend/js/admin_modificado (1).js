@@ -148,7 +148,7 @@ imageInput.addEventListener('change', function () {
   }
 });
 
-// NOVA FUNCIONALIDADE: Funcionalidades adicionais para vendas e sorteio
+
 
 // Variáveis para controle da atualização automática
 let salesData = [];

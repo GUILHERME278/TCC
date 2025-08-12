@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ação entre amigos- Administração</title>
+    <title>Ação entre amigos - Administração</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="../css/admin.css">
@@ -35,7 +35,7 @@
 
     <nav class="bg-blue-600 text-white p-4 shadow-md sticky top-0 z-40">
         <div class="container mx-auto flex justify-between items-center">
-            <h1 class="text-2xl font-bold">Ação entre amigos- - Administração</h1>
+            <h1 class="text-2xl font-bold">Ação entre amigos - Administração</h1>
             <!-- Links adicionais podem ser colocados aqui -->
         </div>
     </nav>
@@ -162,14 +162,7 @@
                         <div class="flex justify-between items-center mb-6">
                             <h3 class="text-xl font-semibold text-gray-800">Vendas da Rifa</h3>
                             <div class="flex gap-3">
-                                <button id="add-sale-btn"
-                                    class="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition flex items-center gap-2">
-                                    <i class="fas fa-plus"></i> Nova Venda
-                                </button>
-                                <button id="export-sales-btn"
-                                    class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition flex items-center gap-2">
-                                    <i class="fas fa-download"></i> Exportar
-                                </button>
+                           
                             </div>
                         </div>
 
@@ -246,131 +239,13 @@
                                     </tr>
                                 </thead>
                                 <tbody id="sales-table-body">
-                                    <!-- Exemplo de linha de venda -->
-                                    <tr class="hover:bg-gray-50 transition-colors">
-                                        <td class="border border-gray-200 px-4 py-3 text-sm text-gray-800">
-                                            João Silva
-                                        </td>
-                                        <td class="border border-gray-200 px-4 py-3 text-sm text-gray-600">
-                                            123.456.789-00
-                                        </td>
-                                        <td class="border border-gray-200 px-4 py-3 text-sm text-gray-600">
-                                            (11) 99999-9999
-                                        </td>
-                                        <td class="border border-gray-200 px-4 py-3 text-sm text-gray-600">
-                                            joao@email.com
-                                        </td>
-                                        <td class="border border-gray-200 px-4 py-3 text-sm">
-                                            <div class="flex flex-wrap gap-1">
-                                                <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs">01</span>
-                                                <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs">15</span>
-                                                <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs">27</span>
-                                            </div>
-                                        </td>
-                                        <td class="border border-gray-200 px-4 py-3 text-sm">
-                                            <span class="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-medium">
-                                                <i class="fas fa-check-circle mr-1"></i>Pago
-                                            </span>
-                                        </td>
-                                        <td class="border border-gray-200 px-4 py-3 text-center">
-                                            <div class="flex justify-center gap-2">
-                                                <button class="text-blue-600 hover:text-blue-800 transition" title="Editar">
-                                                    <i class="fas fa-edit"></i>
-                                                </button>
-                                                <button class="text-green-600 hover:text-green-800 transition" title="WhatsApp">
-                                                    <i class="fab fa-whatsapp"></i>
-                                                </button>
-                                                <button class="text-red-600 hover:text-red-800 transition" title="Excluir">
-                                                    <i class="fas fa-trash"></i>
-                                                </button>
-                                            </div>
-                                        </td>
-                                    </tr>
-
-                                    <!-- Exemplo de linha pendente -->
-                                    <tr class="hover:bg-gray-50 transition-colors">
-                                        <td class="border border-gray-200 px-4 py-3 text-sm text-gray-800">
-                                            Maria Santos
-                                        </td>
-                                        <td class="border border-gray-200 px-4 py-3 text-sm text-gray-600">
-                                            987.654.321-00
-                                        </td>
-                                        <td class="border border-gray-200 px-4 py-3 text-sm text-gray-600">
-                                            (11) 88888-8888
-                                        </td>
-                                        <td class="border border-gray-200 px-4 py-3 text-sm text-gray-600">
-                                            maria@email.com
-                                        </td>
-                                        <td class="border border-gray-200 px-4 py-3 text-sm">
-                                            <div class="flex flex-wrap gap-1">
-                                                <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs">05</span>
-                                                <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs">22</span>
-                                            </div>
-                                        </td>
-                                        <td class="border border-gray-200 px-4 py-3 text-sm">
-                                            <span class="bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full text-xs font-medium">
-                                                <i class="fas fa-clock mr-1"></i>Pendente
-                                            </span>
-                                        </td>
-                                        <td class="border border-gray-200 px-4 py-3 text-center">
-                                            <div class="flex justify-center gap-2">
-                                                <button class="text-blue-600 hover:text-blue-800 transition" title="Editar">
-                                                    <i class="fas fa-edit"></i>
-                                                </button>
-                                                <button class="text-green-600 hover:text-green-800 transition" title="WhatsApp">
-                                                    <i class="fab fa-whatsapp"></i>
-                                                </button>
-                                                <button class="text-red-600 hover:text-red-800 transition" title="Excluir">
-                                                    <i class="fas fa-trash"></i>
-                                                </button>
-                                            </div>
-                                        </td>
-                                    </tr>
-
-                                    <!-- Exemplo de linha cancelada -->
-                                    <tr class="hover:bg-gray-50 transition-colors opacity-75">
-                                        <td class="border border-gray-200 px-4 py-3 text-sm text-gray-800">
-                                            Pedro Oliveira
-                                        </td>
-                                        <td class="border border-gray-200 px-4 py-3 text-sm text-gray-600">
-                                            456.789.123-00
-                                        </td>
-                                        <td class="border border-gray-200 px-4 py-3 text-sm text-gray-600">
-                                            (11) 77777-7777
-                                        </td>
-                                        <td class="border border-gray-200 px-4 py-3 text-sm text-gray-600">
-                                            pedro@email.com
-                                        </td>
-                                        <td class="border border-gray-200 px-4 py-3 text-sm">
-                                            <div class="flex flex-wrap gap-1">
-                                                <span class="bg-gray-100 text-gray-600 px-2 py-1 rounded text-xs">10</span>
-                                            </div>
-                                        </td>
-                                        <td class="border border-gray-200 px-4 py-3 text-sm">
-                                            <span class="bg-red-100 text-red-800 px-2 py-1 rounded-full text-xs font-medium">
-                                                <i class="fas fa-times-circle mr-1"></i>Cancelado
-                                            </span>
-                                        </td>
-                                        <td class="border border-gray-200 px-4 py-3 text-center">
-                                            <div class="flex justify-center gap-2">
-                                                <button class="text-blue-600 hover:text-blue-800 transition" title="Editar">
-                                                    <i class="fas fa-edit"></i>
-                                                </button>
-                                                <button class="text-green-600 hover:text-green-800 transition" title="WhatsApp">
-                                                    <i class="fab fa-whatsapp"></i>
-                                                </button>
-                                                <button class="text-red-600 hover:text-red-800 transition" title="Excluir">
-                                                    <i class="fas fa-trash"></i>
-                                                </button>
-                                            </div>
-                                        </td>
-                                    </tr>
+                                    <!--Neste trecho vão ser inseridos as compras -->
                                 </tbody>
                             </table>
                         </div>
 
                         <!-- Mensagem quando não há vendas -->
-                        <div id="no-sales-message" class="hidden text-center py-8">
+                        <div id="no-sales-message" class="text-center py-8">
                             <i class="fas fa-shopping-cart text-4xl text-gray-400 mb-4"></i>
                             <p class="text-gray-500 text-lg">Nenhuma venda encontrada</p>
                             <p class="text-gray-400 text-sm">As vendas aparecerão aqui quando forem realizadas</p>
@@ -378,17 +253,9 @@
 
                         <!-- Paginação -->
                         <div class="flex justify-between items-center mt-6">
-                            <div class="text-sm text-gray-600">
-                                Mostrando 1-3 de 3 vendas
-                            </div>
+                          
                             <div class="flex gap-2">
-                                <button class="px-3 py-1 border border-gray-300 rounded-md text-sm hover:bg-gray-50 transition disabled:opacity-50" disabled>
-                                    <i class="fas fa-chevron-left"></i> Anterior
-                                </button>
-                                <button class="px-3 py-1 bg-blue-600 text-white rounded-md text-sm">1</button>
-                                <button class="px-3 py-1 border border-gray-300 rounded-md text-sm hover:bg-gray-50 transition disabled:opacity-50" disabled>
-                                    Próximo <i class="fas fa-chevron-right"></i>
-                                </button>
+                              
                             </div>
                         </div>
                     </div>
