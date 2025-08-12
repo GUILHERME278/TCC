@@ -158,7 +158,7 @@ let updateInterval;
 // Função para buscar vendas do banco de dados
 async function fetchSalesFromDatabase() {
     try {
-        const url = `verificar_novas_vendas.php?contagem_atual=${currentSalesCount}`;
+        const url = `/TCC/backend/controller/verificar_novas_vendas.php?contagem_atual=${currentSalesCount}`;
         const response = await fetch(url);
         const data = await response.json();
         

@@ -17,7 +17,7 @@ if ($is_initial_fetch) {
 } else {
     // Se não for a busca inicial, verifica se há novos dados.
     $sql_contagem = "SELECT COUNT(DISTINCT cpf) as total FROM clientes;";
-    $resultado_contagem = mysqli_query($conexao, $sql_contagem);
+    $resultado_contagem = mysqli_query($conn, $sql_contagem);
     $linha_contagem = mysqli_fetch_assoc($resultado_contagem);
     $contagem_banco = (int)$linha_contagem['total'];
 
@@ -45,7 +45,7 @@ if ($deve_buscar_dados) {
             c.nome ASC;
     ";
     
-    $resultado_busca = mysqli_query($conexao, $sql_busca);
+    $resultado_busca = mysqli_query($conn, $sql_busca);
     $vendas = [];
     while ($row = mysqli_fetch_assoc($resultado_busca)) {
         $vendas[] = [
@@ -67,5 +67,5 @@ if ($deve_buscar_dados) {
     echo json_encode(['novos_dados' => false]);
 }
 
-mysqli_close($conexao);
+mysqli_close($conn);
 ?>
