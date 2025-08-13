@@ -738,6 +738,26 @@ function verificarAtualizacoes() {
     }
 }
 
+function iniciarAtualizacaoAutomaticaDeNumeros() {
+    // Chama a função a cada 15 segundos (15000 milissegundos)
+    setInterval(async () => {
+        console.log("Verificando números comprados em segundo plano...");
+        
+        // Salva a seleção atual do usuário para não perdê-la durante a atualização
+        salvarSelecaoAtual();
+        
+        // Busca os números mais recentes do servidor e atualiza a interface
+        await atualizarNumerosComprados();
+        
+        // Marca os números que o usuário já tem no carrinho
+        atualizarStatusNoCarrinho();
+
+        // Restaura a seleção do usuário nos números que ainda estão disponíveis
+        restaurarSelecaoNaPagina();
+
+    }, 15000); // Intervalo de 15 segundos
+}
+
 // NOVA FUNCIONALIDADE: Verifica atualizações a cada 5 segundos
 setInterval(verificarAtualizacoes, 5000);
 
@@ -765,6 +785,8 @@ function inicializar() {
     validarFormularioCompleto();
 
      atualizarNumerosComprados();
+
+     iniciarAtualizacaoAutomaticaDeNumeros(); 
 }
 
 // Executa a inicialização quando o DOM estiver carregado

@@ -31,14 +31,14 @@ function saveRaffleConfig(config) {
 // NOVA FUNCIONALIDADE: Função para carregar configurações nos campos do formulário
 function loadConfigToForm() {
     const config = loadRaffleConfig();
-    
+
     document.getElementById('raffle-title-input').value = config.title;
     document.getElementById('raffle-description-input').value = config.description;
     document.getElementById('raffle-prize-input').value = config.prize;
     document.getElementById('total-numbers-input').value = config.totalNumbers;
     document.getElementById('price-per-number-input').value = config.pricePerNumber;
     document.getElementById('max-per-person-input').value = config.maxPerPerson;
-    
+
     // Se houver uma imagem salva, carrega ela
     if (config.image && config.image !== defaultRaffleConfig.image) {
         const preview = document.getElementById('preview-image');
@@ -50,7 +50,7 @@ function loadConfigToForm() {
 }
 
 // NOVA FUNCIONALIDADE: Event listener para salvar configurações
-document.getElementById('save-settings').addEventListener('click', function() {
+document.getElementById('save-settings').addEventListener('click', function () {
     const config = {
         title: document.getElementById('raffle-title-input').value || defaultRaffleConfig.title,
         description: document.getElementById('raffle-description-input').value || defaultRaffleConfig.description,
@@ -60,16 +60,16 @@ document.getElementById('save-settings').addEventListener('click', function() {
         maxPerPerson: parseInt(document.getElementById('max-per-person-input').value) || defaultRaffleConfig.maxPerPerson,
         image: document.getElementById('preview-image').src || defaultRaffleConfig.image
     };
-    
+
     saveRaffleConfig(config);
-    
+
     // Feedback visual para o usuário
     const saveButton = document.getElementById('save-settings');
     const originalText = saveButton.innerHTML;
     saveButton.innerHTML = '<i class="fas fa-check"></i> Configurações Salvas!';
     saveButton.classList.remove('bg-blue-600', 'hover:bg-blue-700');
     saveButton.classList.add('bg-green-600', 'hover:bg-green-700');
-    
+
     setTimeout(() => {
         saveButton.innerHTML = originalText;
         saveButton.classList.remove('bg-green-600', 'hover:bg-green-700');
@@ -78,22 +78,22 @@ document.getElementById('save-settings').addEventListener('click', function() {
 });
 
 // Login do administrador
-ButtonAdmin.addEventListener('click', function() {
+ButtonAdmin.addEventListener('click', function () {
     login.classList.add('hidden');
     acesso.classList.remove('hidden');
-    
+
     // NOVA FUNCIONALIDADE: Carrega configurações quando o admin faz login
     loadConfigToForm();
-    
+
     // NOVA FUNCIONALIDADE: Inicia atualização automática das vendas
     startAutoUpdate();
 });
 
 // Logout do administrador
-document.getElementById('logout-btn').addEventListener('click', function() {
+document.getElementById('logout-btn').addEventListener('click', function () {
     login.classList.remove('hidden');
     acesso.classList.add('hidden');
-    
+
     // NOVA FUNCIONALIDADE: Para atualização automática ao fazer logout
     stopAutoUpdate();
 });
@@ -104,30 +104,30 @@ const tabs = document.querySelectorAll('.admin-tab');
 const contents = document.querySelectorAll('.admin-tab-panel');
 
 tabs.forEach(tab => {
-  tab.addEventListener('click', () => {
-    const target = tab.getAttribute('data-tab');
-    const targetPanel = document.getElementById(`${target}-tab`);
+    tab.addEventListener('click', () => {
+        const target = tab.getAttribute('data-tab');
+        const targetPanel = document.getElementById(`${target}-tab`);
 
-    // Remove a classe active de todos os botões
-    tabs.forEach(t => {
-      t.classList.remove('active');
-      t.classList.remove('text-blue-600');
-      t.classList.remove('border-blue-600');
-      t.classList.add('text-gray-600');
+        // Remove a classe active de todos os botões
+        tabs.forEach(t => {
+            t.classList.remove('active');
+            t.classList.remove('text-blue-600');
+            t.classList.remove('border-blue-600');
+            t.classList.add('text-gray-600');
+        });
+
+        // Remove a classe active de todos os painéis
+        contents.forEach(c => c.classList.remove('active'));
+
+        // Ativa o botão clicado
+        tab.classList.add('active');
+        tab.classList.remove('text-gray-600');
+        tab.classList.add('text-blue-600');
+        tab.classList.add('border-blue-600');
+
+        // Mostra o painel correspondente
+        targetPanel.classList.add('active');
     });
-
-    // Remove a classe active de todos os painéis
-    contents.forEach(c => c.classList.remove('active'));
-
-    // Ativa o botão clicado
-    tab.classList.add('active');
-    tab.classList.remove('text-gray-600');
-    tab.classList.add('text-blue-600');
-    tab.classList.add('border-blue-600');
-
-    // Mostra o painel correspondente
-    targetPanel.classList.add('active');
-  });
 });
 
 // Script para adicionar imagem
@@ -136,16 +136,16 @@ const preview = document.getElementById('preview-image');
 const cameraIcon = document.getElementById('camera-icon');
 
 imageInput.addEventListener('change', function () {
-  const file = this.files[0];
-  if (file) {
-    const reader = new FileReader();
-    reader.onload = function (e) {
-      preview.src = e.target.result;
-      preview.classList.remove('hidden');
-      cameraIcon.classList.add('hidden');
+    const file = this.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function (e) {
+            preview.src = e.target.result;
+            preview.classList.remove('hidden');
+            cameraIcon.classList.add('hidden');
+        }
+        reader.readAsDataURL(file);
     }
-    reader.readAsDataURL(file);
-  }
 });
 
 
@@ -161,7 +161,7 @@ async function fetchSalesFromDatabase() {
         const url = `/TCC/backend/controller/verificar_novas_vendas.php?contagem_atual=${currentSalesCount}`;
         const response = await fetch(url);
         const data = await response.json();
-        
+
         if (data.novos_dados) {
             salesData = data.vendas;
             currentSalesCount = salesData.length;
@@ -178,12 +178,12 @@ async function fetchSalesFromDatabase() {
 function startAutoUpdate() {
     // Busca inicial
     fetchSalesFromDatabase();
-    
+
     // Configura atualização automática a cada 10 segundos
     updateInterval = setInterval(() => {
         fetchSalesFromDatabase();
     }, 10000); // 10 segundos
-    
+
     console.log('Atualização automática iniciada - verificando a cada 10 segundos');
 }
 
@@ -201,13 +201,13 @@ function updateStatistics() {
     const totalSales = salesData.length;
     const paidSales = salesData.filter(sale => sale.status === 'pago').length;
     const pendingSales = salesData.filter(sale => sale.status === 'pendente').length;
-    
+
     // Calcula total arrecadado (assumindo R$ 5,00 por número)
     const config = loadRaffleConfig();
     const totalRevenue = salesData.reduce((total, sale) => {
         return total + (sale.total_numbers * config.pricePerNumber);
     }, 0);
-    
+
     // Atualiza os elementos na tela
     document.querySelector('.bg-blue-50 .text-2xl').textContent = totalSales;
     document.querySelector('.bg-green-50 .text-2xl').textContent = paidSales;
@@ -219,15 +219,15 @@ function updateStatistics() {
 function renderSales(sales = salesData) {
     const salesTableBody = document.getElementById('sales-table-body');
     const noSalesMessage = document.getElementById('no-sales-message');
-    
+
     if (!salesTableBody) {
         console.error('Elemento sales-table-body não encontrado');
         return;
     }
-    
+
     // Limpa a tabela
     salesTableBody.innerHTML = '';
-    
+
     if (sales.length === 0) {
         // Mostra mensagem de "nenhuma venda"
         if (noSalesMessage) {
@@ -235,16 +235,16 @@ function renderSales(sales = salesData) {
         }
         return;
     }
-    
+
     // Esconde mensagem de "nenhuma venda"
     if (noSalesMessage) {
         noSalesMessage.classList.add('hidden');
     }
-    
+
     sales.forEach(sale => {
         const row = document.createElement('tr');
         row.classList.add('hover:bg-gray-50', 'transition-colors');
-        
+
         // Define classes e texto do status
         let statusClass, statusIcon, statusText;
         switch (sale.status) {
@@ -264,12 +264,12 @@ function renderSales(sales = salesData) {
                 statusIcon = 'fas fa-clock';
                 statusText = 'Pendente';
         }
-        
+
         // Formata os números
-        const numbersHtml = sale.numbers.map(num => 
+        const numbersHtml = sale.numbers.map(num =>
             `<span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs">${num.toString().padStart(2, '0')}</span>`
         ).join(' ');
-        
+
         row.innerHTML = `
             <td class="border border-gray-200 px-4 py-3 text-sm text-gray-800">
                 ${sale.name}
@@ -298,19 +298,19 @@ function renderSales(sales = salesData) {
                     <button class="text-blue-600 hover:text-blue-800 transition" title="Editar" onclick="editSale('${sale.id}')">
                         <i class="fas fa-edit"></i>
                     </button>
-                    <button class="text-green-600 hover:text-green-800 transition" title="WhatsApp" onclick="sendWhatsApp('${sale.phone}', '${sale.name}')">
-                        <i class="fab fa-whatsapp"></i>
-                    </button>
-                    <button class="text-red-600 hover:text-red-800 transition" title="Excluir" onclick="deleteSale('${sale.id}')">
+                    
+                   
+                    <button class="text-red-600 hover:text-red-800 transition" title="Excluir" onclick="deleteSale('${sale.cpf}')">
+
                         <i class="fas fa-trash"></i>
                     </button>
                 </div>
             </td>
         `;
-        
+
         salesTableBody.appendChild(row);
     });
-    
+
     // Atualiza contador de paginação
     const paginationInfo = document.querySelector('.text-sm.text-gray-600');
     if (paginationInfo) {
@@ -323,83 +323,246 @@ function filterSales() {
     const statusFilter = document.getElementById('filter-status').value;
     const nameSearch = document.getElementById('search-name').value.toLowerCase();
     const numberSearch = document.getElementById('search-number').value;
-    
+
     let filteredSales = salesData;
-    
+
     // Filtro por status
     if (statusFilter) {
         filteredSales = filteredSales.filter(sale => sale.status === statusFilter);
     }
-    
+
     // Filtro por nome
     if (nameSearch) {
-        filteredSales = filteredSales.filter(sale => 
+        filteredSales = filteredSales.filter(sale =>
             sale.name.toLowerCase().includes(nameSearch)
         );
     }
-    
+
     // Filtro por número
     if (numberSearch) {
-        filteredSales = filteredSales.filter(sale => 
+        filteredSales = filteredSales.filter(sale =>
             sale.numbers.includes(numberSearch)
         );
     }
-    
+
     renderSales(filteredSales);
 }
 
 // Event listeners para filtros
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     const filterStatus = document.getElementById('filter-status');
     const searchName = document.getElementById('search-name');
     const searchNumber = document.getElementById('search-number');
-    
+
     if (filterStatus) filterStatus.addEventListener('change', filterSales);
     if (searchName) searchName.addEventListener('input', filterSales);
     if (searchNumber) searchNumber.addEventListener('input', filterSales);
 });
 
-// Função para enviar WhatsApp
-function sendWhatsApp(phone, name) {
-    const cleanPhone = phone.replace(/\D/g, ''); // Remove caracteres não numéricos
-    const message = `Olá ${name}! Entrando em contato sobre sua participação na rifa.`;
-    const url = `https://wa.me/55${cleanPhone}?text=${encodeURIComponent(message)}`;
-    window.open(url, '_blank');
-}
 
-// Função para editar venda
+
+// SUBSTITUIR a função editSale atual por:
 function editSale(id) {
     const sale = salesData.find(s => s.id === id);
     if (sale) {
+        // Preenche os campos do modal
+        document.getElementById('edit-sale-id').value = sale.id;
         document.getElementById('edit-sale-name').value = sale.name;
+        document.getElementById('edit-sale-cpf').value = sale.cpf;
         document.getElementById('edit-sale-phone').value = sale.phone;
-        document.getElementById('edit-sale-status').value = sale.status;
-        
-        // Renderizar números
+        document.getElementById('edit-sale-email').value = sale.email;
+
+        // Renderizar números editáveis
         const numbersContainer = document.getElementById('edit-sale-numbers');
         if (numbersContainer) {
             numbersContainer.innerHTML = '';
             sale.numbers.forEach(num => {
                 const span = document.createElement('span');
-                span.className = 'bg-blue-100 text-blue-800 px-2 py-1 rounded text-sm cursor-pointer';
+                span.className = 'bg-blue-100 text-blue-800 px-2 py-1 rounded text-sm cursor-pointer hover:bg-red-100';
                 span.textContent = num.toString().padStart(2, '0');
+                span.title = 'Clique para remover';
                 span.onclick = () => span.remove();
                 numbersContainer.appendChild(span);
             });
         }
-        
+
+        // Mostra o modal
         document.getElementById('edit-sale-modal').classList.remove('hidden');
     }
 }
 
-// Função para deletar venda
-function deleteSale(id) {
-    if (confirm('Tem certeza que deseja excluir esta venda?')) {
-        // Em um sistema real, faria uma requisição para o backend para deletar
-        console.log('Deletar venda com ID:', id);
-        alert('Funcionalidade de exclusão deve ser implementada no backend');
+// ADICIONAR nova função para salvar edições
+async function saveSaleEdit() {
+    const id = document.getElementById('edit-sale-id').value;
+    const name = document.getElementById('edit-sale-name').value;
+    const cpf = document.getElementById('edit-sale-cpf').value;
+    const phone = document.getElementById('edit-sale-phone').value;
+    const email = document.getElementById('edit-sale-email').value;
+    
+    // Coleta números do container
+    const numbersContainer = document.getElementById('edit-sale-numbers');
+    const numbers = Array.from(numbersContainer.children).map(span => 
+        parseInt(span.textContent)
+    );
+
+    // Validações básicas
+    if (!name || !cpf || !phone || !email || numbers.length === 0) {
+        alert('Todos os campos são obrigatórios e pelo menos um número deve ser selecionado.');
+        return;
+    }
+
+    try {
+        const response = await fetch('/TCC/backend/controller/editar_venda.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                id: id,
+                name: name,
+                cpf: cpf,
+                phone: phone,
+                email: email,
+                numbers: numbers
+            })
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            alert('Venda atualizada com sucesso!');
+            document.getElementById('edit-sale-modal').classList.add('hidden');
+            fetchSalesFromDatabase(); // Recarrega os dados
+        } else {
+            alert('Erro ao atualizar venda: ' + result.message);
+        }
+    } catch (error) {
+        console.error('Erro na requisição:', error);
+        alert('Erro ao conectar com o servidor.');
     }
 }
+
+// ADICIONAR função para cancelar edição
+function cancelSaleEdit() {
+    document.getElementById('edit-sale-modal').classList.add('hidden');
+}
+
+// ADICIONAR função para adicionar número
+function addNumberToEdit() {
+    const input = document.getElementById('add-number-input');
+    const number = parseInt(input.value);
+    
+    if (!number || number < 1) {
+        alert('Digite um número válido.');
+        return;
+    }
+
+    const numbersContainer = document.getElementById('edit-sale-numbers');
+    
+    // Verifica se o número já existe
+    const existingNumbers = Array.from(numbersContainer.children).map(span => 
+        parseInt(span.textContent)
+    );
+    
+    if (existingNumbers.includes(number)) {
+        alert('Este número já foi selecionado.');
+        return;
+    }
+
+    // Adiciona o número
+    const span = document.createElement('span');
+    span.className = 'bg-blue-100 text-blue-800 px-2 py-1 rounded text-sm cursor-pointer hover:bg-red-100';
+    span.textContent = number.toString().padStart(2, '0');
+    span.title = 'Clique para remover';
+    span.onclick = () => span.remove();
+    numbersContainer.appendChild(span);
+    
+    input.value = '';
+}
+
+async function loadRaffleNumbers() {
+    try {
+        const response = await fetch('/TCC/backend/controller/get_raffle_numbers.php');
+        const data = await response.json();
+
+        if (data.success) {
+            const raffleNumbers = data.numbers;
+            // Aqui você precisaria de uma função para renderizar esses números na sua interface de compra
+            // Por exemplo, se você tem uma div com id="raffle-numbers-container"
+            const numbersContainer = document.getElementById('raffle-numbers-container');
+            if (numbersContainer) {
+                numbersContainer.innerHTML = ''; // Limpa o container
+                raffleNumbers.forEach(item => {
+                    const numberDiv = document.createElement('div');
+                    numberDiv.textContent = item.number.toString().padStart(4, '0'); // Formata com zeros à esquerda
+                    numberDiv.classList.add('raffle-number', 'p-2', 'border', 'rounded', 'text-center');
+                    if (item.is_sold) {
+                        numberDiv.classList.add('bg-red-200', 'text-red-800', 'cursor-not-allowed');
+                    } else {
+                        numberDiv.classList.add('bg-green-200', 'text-green-800', 'cursor-pointer', 'hover:bg-green-300');
+                        // Adicione um event listener para seleção, se for o caso
+                    }
+                    numbersContainer.appendChild(numberDiv);
+                });
+            }
+            console.log('Números da rifa atualizados:', raffleNumbers);
+        } else {
+            console.error('Erro ao carregar números da rifa:', data.message);
+        }
+    } catch (error) {
+        console.error('Erro na requisição para carregar números da rifa:', error);
+    }
+}
+
+// Função para deletar venda (agora com requisição ao backend)
+async function deleteSale(cpf) {
+    // Pede confirmação ao usuário antes de prosseguir
+    if (!confirm('Tem certeza que deseja excluir este cliente e todos os seus números? Esta ação não pode ser desfeita.')) {
+        return; // Se o usuário cancelar, a função para aqui
+    }
+
+    try {
+        // Faz a requisição para o script PHP de exclusão
+        const response = await fetch('/TCC/backend/controller/excluir_cliente.php', {
+            method: 'POST', // Método HTTP
+            headers: {
+                'Content-Type': 'application/json' // Informa que estamos enviando dados em formato JSON
+            },
+            body: JSON.stringify({ cpf: cpf }) // Envia o CPF do cliente no corpo da requisição
+        });
+
+        // Converte a resposta do servidor para JSON
+        const result = await response.json();
+
+        if (result.success) {
+            // Se a exclusão foi bem-sucedida
+            alert('Cliente excluído com sucesso!');
+
+            // Atualiza a lista de vendas na tela para refletir a exclusão
+            // Remove o cliente da lista local 'salesData'
+            salesData = salesData.filter(sale => sale.cpf !== cpf);
+            currentSalesCount = salesData.length; // Atualiza a contagem
+
+            // Renderiza novamente a tabela e as estatísticas
+            renderSales();
+            updateStatistics();
+
+            if (typeof loadRaffleNumbers === 'function') {
+                loadRaffleNumbers();
+            }
+
+        } else {
+            // Se o backend retornou um erro
+            alert('Erro ao excluir o cliente: ' + result.message);
+        }
+
+    } catch (error) {
+        // Se ocorrer um erro na comunicação com o servidor
+        console.error('Erro na requisição de exclusão:', error);
+        alert('Ocorreu um erro de comunicação ao tentar excluir o cliente.');
+    }
+}
+
 
 // Event listeners para modal de edição
 document.getElementById('close-edit-sale').addEventListener('click', () => {
@@ -411,25 +574,25 @@ document.getElementById('cancel-edit-sale').addEventListener('click', () => {
 });
 
 // Função para realizar sorteio
-document.getElementById('draw-button').addEventListener('click', function() {
+document.getElementById('draw-button').addEventListener('click', function () {
     const config = loadRaffleConfig();
     const soldNumbers = salesData.flatMap(sale => sale.numbers);
-    
+
     if (soldNumbers.length === 0) {
         alert('Não há números vendidos para realizar o sorteio!');
         return;
     }
-    
+
     // Sorteia um número aleatório entre os vendidos
     const winnerNumber = soldNumbers[Math.floor(Math.random() * soldNumbers.length)];
     const winner = salesData.find(sale => sale.numbers.includes(winnerNumber));
-    
+
     // Exibe o resultado
     document.getElementById('winner-number').textContent = winnerNumber.toString().padStart(2, '0');
     document.getElementById('winner-name').textContent = winner.name;
     document.getElementById('winner-phone').textContent = winner.phone;
     document.getElementById('winner-section').classList.remove('hidden');
-    
+
     // Salva o resultado do sorteio
     const drawResult = {
         number: winnerNumber,
@@ -440,16 +603,16 @@ document.getElementById('draw-button').addEventListener('click', function() {
 });
 
 // Função para imprimir resultado
-document.getElementById('print-winner').addEventListener('click', function() {
+document.getElementById('print-winner').addEventListener('click', function () {
     window.print();
 });
 
 // Função para compartilhar resultado
-document.getElementById('share-winner').addEventListener('click', function() {
+document.getElementById('share-winner').addEventListener('click', function () {
     const winnerNumber = document.getElementById('winner-number').textContent;
     const winnerName = document.getElementById('winner-name').textContent;
     const text = `🎉 RESULTADO DO SORTEIO! 🎉\n\nNúmero sorteado: ${winnerNumber}\nGanhador: ${winnerName}\n\nParabéns! 🏆`;
-    
+
     if (navigator.share) {
         navigator.share({
             title: 'Resultado do Sorteio',
@@ -464,17 +627,17 @@ document.getElementById('share-winner').addEventListener('click', function() {
 });
 
 // Função para exportar vendas
-document.getElementById('export-sales-btn').addEventListener('click', function() {
+document.getElementById('export-sales-btn').addEventListener('click', function () {
     if (salesData.length === 0) {
         alert('Não há vendas para exportar');
         return;
     }
-    
-    const csv = 'Nome,CPF,Telefone,Email,Números,Status\n' + 
-        salesData.map(sale => 
+
+    const csv = 'Nome,CPF,Telefone,Email,Números,Status\n' +
+        salesData.map(sale =>
             `"${sale.name}","${sale.cpf}","${sale.phone}","${sale.email}","${sale.numbers.join(', ')}","${sale.status}"`
         ).join('\n');
-    
+
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -485,13 +648,13 @@ document.getElementById('export-sales-btn').addEventListener('click', function()
 });
 
 // NOVA FUNCIONALIDADE: Inicialização quando a página carrega
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     // Se já houver configurações salvas, carrega valores padrão nos campos
     const config = loadRaffleConfig();
     if (config !== defaultRaffleConfig) {
         console.log('Configurações encontradas no Local Storage:', config);
     }
-    
+
     console.log('Sistema de vendas inicializado - aguardando login do administrador');
 });
 
