@@ -458,28 +458,23 @@ function carrinhoTemItens() {
 
 // Validação completa do formulário e carrinho
 function validarFormularioCompleto() {
-    const nome = inputNome.value.trim();
-    const cpf = InputCpf.value.trim();
-    const telefone = InputPhone.value.trim();
-    
-    const nomeValido = nome.length >= 3;
-    const cpfValido = cpf.length === 14;
-    const telefoneValido = telefone.length >= 14;
+    const formulario = document.querySelector("form"); // ou o seletor correto do seu formulário
     const carrinhoValido = carrinhoTemItens();
-    
-    const formularioCompleto = nomeValido && cpfValido && telefoneValido && carrinhoValido;
-    EndCompra.disabled = !formularioCompleto;
-    
-    if (!carrinhoValido && nomeValido && cpfValido && telefoneValido) {
+    const formularioValido = formulario.checkValidity();
+
+    EndCompra.disabled = !(formularioValido && carrinhoValido);
+
+    if (!carrinhoValido && formularioValido) {
         EndCompra.title = "Adicione números ao carrinho para finalizar a compra";
-    } else if (!formularioCompleto) {
+    } else if (!(formularioValido && carrinhoValido)) {
         EndCompra.title = "Preencha todos os campos obrigatórios e adicione números ao carrinho";
     } else {
         EndCompra.title = "Finalizar compra";
     }
-    
-    return formularioCompleto;
+
+    return formularioValido && carrinhoValido;
 }
+
 
 // Evento para adicionar os itens ao carrinho
 botao.addEventListener("click", () => {
