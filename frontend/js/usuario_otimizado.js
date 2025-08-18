@@ -309,47 +309,53 @@ function renderizarPagina(pagina) {
     PainelNumero.style.transform = "translateY(10px)";
     
     setTimeout(() => {
-        PainelNumero.innerHTML = "";
+       // Dentro da função renderizarPagina(pagina)
+// ...
+PainelNumero.innerHTML = "";
 
-        const inicio = pagina * NUMEROS_POR_PAGINA + 1;
-        const fim = Math.min(inicio + NUMEROS_POR_PAGINA - 1, TOTAL_NUMEROS);
+// 1. Crie um DocumentFragment
+const fragment = document.createDocumentFragment(); 
 
-        for (let i = inicio; i <= fim; i++) {
-            const numero = document.createElement("div");
-            numero.classList.add("number-item");
-            numero.textContent = i;
+const inicio = pagina * NUMEROS_POR_PAGINA + 1;
+const fim = Math.min(inicio + NUMEROS_POR_PAGINA - 1, TOTAL_NUMEROS);
 
-            numero.addEventListener("click", () => {
-                // Verificação de segurança: se o número está vendido, não faz nada.
-                if (numero.classList.contains("sold") || numero.classList.contains("in-cart")) {
-                    numero.classList.add('shake-animation');
-                    setTimeout(() => numero.classList.remove('shake-animation'), 400);
-                    return; 
-                }
-                
-                const numeroValue = parseInt(numero.textContent);
-                
-                if (!numero.classList.contains("selected") && numerosSelecionados.size >= MAX_POR_PESSOA) {
-                    alert(`Você pode selecionar no máximo ${MAX_POR_PESSOA} números.`);
-                    return;
-                }
-                
-                // Alterna a seleção
-                numero.classList.toggle("selected");
+for (let i = inicio; i <= fim; i++) {
+    const numero = document.createElement("div");
+    numero.classList.add("number-item");
+    numero.textContent = i;
 
-                // Atualiza o Set de seleção global
-                if (numero.classList.contains("selected")) {
-                    numerosSelecionados.add(numeroValue);
-                } else {
-                    numerosSelecionados.delete(numeroValue);
-                }
-                
-                atualizarEstadoBotoes();
-                VerificaNumero();
-            });
-
-            PainelNumero.appendChild(numero);
+    numero.addEventListener("click", () => {
+        // ... (toda a sua lógica de clique permanece a mesma) ...
+        if (numero.classList.contains("sold") || numero.classList.contains("in-cart")) {
+            numero.classList.add('shake-animation');
+            setTimeout(() => numero.classList.remove('shake-animation'), 400);
+            return; 
         }
+        const numeroValue = parseInt(numero.textContent);
+        if (!numero.classList.contains("selected") && numerosSelecionados.size >= MAX_POR_PESSOA) {
+            alert(`Você pode selecionar no máximo ${MAX_POR_PESSOA} números.`);
+            return;
+        }
+        numero.classList.toggle("selected");
+        if (numero.classList.contains("selected")) {
+            numerosSelecionados.add(numeroValue);
+        } else {
+            numerosSelecionados.delete(numeroValue);
+        }
+        atualizarEstadoBotoes();
+        VerificaNumero();
+    });
+
+    // 2. Adicione o número ao fragment, não ao DOM real
+    fragment.appendChild(numero); 
+}
+
+// 3. Após o loop, adicione o fragment ao DOM de uma só vez
+PainelNumero.appendChild(fragment); 
+
+// O resto da função continua igual...
+// ...
+
 
         // >>> ORDEM DE EXECUÇÃO CORRIGIDA <<<
         setTimeout(async () => {
@@ -456,24 +462,47 @@ function carrinhoTemItens() {
     return itensCarrinho.length > 0;
 }
 
-// Validação completa do formulário e carrinho
 function validarFormularioCompleto() {
-    const formulario = document.querySelector("form"); // ou o seletor correto do seu formulário
+    // 1. Verifica se os campos obrigatórios estão preenchidos
+    const nomeValido = inputNome.value.trim().length >= 2;
+    const telefoneValido = InputPhone.value.replace(/\D/g, '').length >= 10;
+    
+    // 2. Usa a nova função para validar o CPF
+    const cpfValido = validarCPF(InputCpf.value);
+
+    // 3. Verifica se o carrinho tem itens
     const carrinhoValido = carrinhoTemItens();
-    const formularioValido = formulario.checkValidity();
 
-    EndCompra.disabled = !(formularioValido && carrinhoValido);
+    // Lógica de habilitação centralizada
+    const podeFinalizar = nomeValido && telefoneValido && cpfValido && carrinhoValido;
+    
+    EndCompra.disabled = !podeFinalizar;
 
-    if (!carrinhoValido && formularioValido) {
-        EndCompra.title = "Adicione números ao carrinho para finalizar a compra";
-    } else if (!(formularioValido && carrinhoValido)) {
-        EndCompra.title = "Preencha todos os campos obrigatórios e adicione números ao carrinho";
+    // Feedback visual para o campo de CPF (opcional, mas recomendado)
+    if (InputCpf.value.length > 0) { // Só mostra o feedback se o usuário digitou algo
+        if (cpfValido) {
+            InputCpf.style.borderColor = '#22c55e'; // Verde
+        } else {
+            InputCpf.style.borderColor = '#ef4444'; // Vermelho
+        }
     } else {
-        EndCompra.title = "Finalizar compra";
+        InputCpf.style.borderColor = ''; // Cor padrão
     }
 
-    return formularioValido && carrinhoValido;
+    // Atualiza o título para dar dicas ao usuário
+    if (!podeFinalizar) {
+        if (!carrinhoValido) {
+            EndCompra.title = "Adicione números ao carrinho para continuar.";
+        } else {
+            EndCompra.title = "Por favor, preencha todos os campos obrigatórios corretamente.";
+        }
+    } else {
+        EndCompra.title = "Tudo pronto para finalizar a compra!";
+    }
+
+    return podeFinalizar;
 }
+
 
 
 // Evento para adicionar os itens ao carrinho
@@ -806,53 +835,23 @@ FecharComprados.addEventListener("click", () => {
 
 
 
-// Funcionalidade de busca de números comprados por CPF
-const searchCPFInput = document.getElementById('searchCPF');
+// Localize este bloco (ou adicione se não existir) na seção de inicialização ou eventos do seu JS
 const searchButton = document.getElementById('searchButton');
+const searchCPFInput = document.getElementById('searchCPF');
 const purchasedNumbersResults = document.getElementById('purchasedNumbersResults');
 
 searchButton.addEventListener('click', async () => {
     const cpf = searchCPFInput.value.trim();
-
-    if (!cpf) {
-        purchasedNumbersResults.innerHTML = '<div class="text-center text-red-500 italic py-8">Por favor, digite um CPF.</div>';
+    if (cpf === '') {
+        purchasedNumbersResults.innerHTML = '<div class="text-center text-red-500 py-8">Por favor, digite um CPF.</div>';
         return;
     }
 
-    // Limpa resultados anteriores e mostra mensagem de carregamento
-    purchasedNumbersResults.innerHTML = '<div class="text-center text-gray-500 italic py-8"><i class="fas fa-spinner fa-spin mr-2"></i>Buscando números...</div>';
-
-    try {
-        const response = await fetch('/TCC/backend/controller/busca.php', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ cpf: cpf })
-        });
-
-        const data = await response.json();
-
-        if (data.success) {
-            if (data.numeros && data.numeros.length > 0) {
-                const numerosFormatados = data.numeros.map(num => `<span class="inline-block bg-blue-100 text-blue-800 text-sm font-semibold px-3 py-1 rounded-full m-1">${num}</span>`).join('');
-                purchasedNumbersResults.innerHTML = `
-                    <h4 class="text-lg font-semibold mb-2">Números encontrados para ${data.cpf}:</h4>
-                    <div class="flex flex-wrap justify-center p-4 border rounded-md bg-gray-50">
-                        ${numerosFormatados}
-                    </div>
-                `;
-            } else {
-                purchasedNumbersResults.innerHTML = '<div class="text-center text-gray-500 italic py-8">Nenhum número encontrado para o CPF informado.</div>';
-            }
-        } else {
-            purchasedNumbersResults.innerHTML = `<div class="text-center text-red-500 italic py-8">Erro: ${data.message || 'Não foi possível buscar os números.'}</div>`;
-        }
-    } catch (error) {
-        console.error('Erro ao buscar números:', error);
-        purchasedNumbersResults.innerHTML = '<div class="text-center text-red-500 italic py-8">Erro na comunicação com o servidor. Tente novamente mais tarde.</div>';
-    }
+    await buscarEExibirNumerosComprados(cpf);
 });
+
+
+
 
 // Abre e fecha o modal de números comprados
 const purchasedNumbersModal = document.getElementById('purchasedNumbersModal');
@@ -903,52 +902,55 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 // NOVA FUNCIONALIDADE: Elementos para a busca por CPF
-const InputCpfBusca = document.getElementById("search-cpf-input");
-const BotaoBusca = document.getElementById("search-cpf-button");
-const ResultadoBusca = document.getElementById("search-results");
+const InputCpfBusca = document.getElementById("searchCPF");
+const BotaoBusca = document.getElementById("searchButton");
+const ResultadoBusca = document.getElementById("purchasedNumbersResults");
 
-// Função para buscar números por CPF
-async function buscarNumerosPorCpf() {
-    const cpf = InputCpfBusca.value.trim();
-
-    if (!cpf) {
-        alert("Por favor, digite um CPF para buscar.");
-        return;
-    }
-
-    // Normaliza o CPF (remove caracteres não numéricos)
-    const cpfLimpo = cpf.replace(/\D/g, "");
-
-    if (cpfLimpo.length !== 11) {
-        alert("CPF inválido. O CPF deve conter 11 dígitos.");
-        return;
-    }
-
-    ResultadoBusca.innerHTML = "Buscando...";
+// Adicione esta nova função ao seu arquivo usuario_otimizado.js
+async function buscarEExibirNumerosComprados(cpf) {
+    const purchasedNumbersResults = document.getElementById('purchasedNumbersResults');
+    purchasedNumbersResults.innerHTML = '<div class="text-center text-gray-500 py-8"><i class="fas fa-spinner fa-spin mr-2"></i>Buscando...</div>';
 
     try {
-        const response = await fetch("busca.php", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ cpf: cpfLimpo }),
+        const formData = new FormData();
+        formData.append('cpf', cpf); // Envia o CPF para o PHP
+
+        const response = await fetch('/TCC/backend/controller/BuscarComprados.php', {
+            method: 'POST',
+            body: formData // Usa FormData para enviar o CPF como POST
         });
+
+        if (!response.ok) {
+            throw new Error(`Erro HTTP: ${response.status} ${response.statusText}`);
+        }
 
         const data = await response.json();
 
         if (data.success) {
+            let htmlContent = `
+                <div class="bg-blue-50 border border-blue-200 p-4 rounded-md mb-4">
+                    <p class="font-semibold text-blue-800">Nome: ${data.nome}</p>
+                    <p class="text-blue-700">CPF: ${data.cpf}</p>
+                </div>
+                <h4 class="text-lg font-semibold mb-2 text-gray-700">Seus Números:</h4>
+                <div class="flex flex-wrap gap-2">
+            `;
             if (data.numeros && data.numeros.length > 0) {
-                ResultadoBusca.innerHTML = `Números encontrados para o CPF ${data.cpf}: <strong>${data.numeros.join(", ")}</strong>`;
+                data.numeros.forEach(num => {
+                    htmlContent += `<span class="bg-green-100 text-green-800 text-sm font-medium px-3 py-1 rounded-full">${num}</span>`;
+                });
             } else {
-                ResultadoBusca.innerHTML = `Nenhum número encontrado para o CPF ${data.cpf}.`;
+                htmlContent += `<p class="text-gray-600">Nenhum número encontrado para este CPF.</p>`;
             }
+            htmlContent += `</div>`;
+            purchasedNumbersResults.innerHTML = htmlContent;
         } else {
-            ResultadoBusca.innerHTML = `Erro na busca: ${data.message || "Ocorreu um erro desconhecido."}`; 
+            purchasedNumbersResults.innerHTML = `<div class="text-center text-red-500 py-8">${data.message || 'Erro desconhecido ao buscar números.'}</div>`;
         }
+
     } catch (error) {
-        console.error("Erro ao buscar números:", error);
-        ResultadoBusca.innerHTML = "Erro ao conectar com o servidor de busca.";
+        console.error('Erro ao buscar números comprados:', error);
+        purchasedNumbersResults.innerHTML = `<div class="text-center text-red-500 py-8">Erro ao conectar com o servidor: ${error.message}.</div>`;
     }
 }
 
@@ -1017,6 +1019,38 @@ function atualizarStatusNoCarrinho() {
         }
     });
 }
+
+// Adicione esta nova função ao seu código
+function validarCPF(cpf) {
+    cpf = cpf.replace(/[^\d]+/g, ''); // Remove caracteres não numéricos
+    if (cpf === '' || cpf.length !== 11 || /^(\d)\1{10}$/.test(cpf)) {
+        return false;
+    }
+    let add = 0;
+    for (let i = 0; i < 9; i++) {
+        add += parseInt(cpf.charAt(i)) * (10 - i);
+    }
+    let rev = 11 - (add % 11);
+    if (rev === 10 || rev === 11) {
+        rev = 0;
+    }
+    if (rev !== parseInt(cpf.charAt(9))) {
+        return false;
+    }
+    add = 0;
+    for (let i = 0; i < 10; i++) {
+        add += parseInt(cpf.charAt(i)) * (11 - i);
+    }
+    rev = 11 - (add % 11);
+    if (rev === 10 || rev === 11) {
+        rev = 0;
+    }
+    if (rev !== parseInt(cpf.charAt(10))) {
+        return false;
+    }
+    return true;
+}
+
 
 
 
