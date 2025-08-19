@@ -295,11 +295,7 @@ function renderSales(sales = salesData) {
             </td>
             <td class="border border-gray-200 px-4 py-3 text-center">
                 <div class="flex justify-center gap-2">
-                    <button class="text-blue-600 hover:text-blue-800 transition" title="Editar" onclick="editSale('${sale.id}')">
-                        <i class="fas fa-edit"></i>
-                    </button>
-                    
-                   
+                 
                     <button class="text-red-600 hover:text-red-800 transition" title="Excluir" onclick="deleteSale('${sale.cpf}')">
 
                         <i class="fas fa-trash"></i>

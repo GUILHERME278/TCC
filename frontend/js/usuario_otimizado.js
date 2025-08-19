@@ -302,72 +302,84 @@ function atualizarDotsAtivos(paginaAnterior, paginaAtual) {
     });
 }
 
-// Função para gerar os números da página atual
+// Função para gerar os números da página atual (VERSÃO OTIMIZADA)
 function renderizarPagina(pagina) {
-    // Adiciona animação de fade out
+    // 1. Inicia a animação de fade-out para uma transição suave.
     PainelNumero.style.opacity = "0";
     PainelNumero.style.transform = "translateY(10px)";
-    
+
+    // 2. Usa setTimeout para permitir que a animação de fade-out comece
+    // antes de o navegador congelar para processar o loop.
     setTimeout(() => {
-        PainelNumero.innerHTML = "";
+        // 3. Cria um "DocumentFragment", que é um contêiner de DOM leve e fora da tela.
+        // Isso permite construir todos os novos elementos em memória, sem causar
+        // reflows/repaints a cada `appendChild`.
+        const fragmento = document.createDocumentFragment();
 
         const inicio = pagina * NUMEROS_POR_PAGINA + 1;
         const fim = Math.min(inicio + NUMEROS_POR_PAGINA - 1, TOTAL_NUMEROS);
 
+        // 4. Gera todos os números da página e os adiciona ao fragmento (operação rápida em memória).
         for (let i = inicio; i <= fim; i++) {
             const numero = document.createElement("div");
             numero.classList.add("number-item");
             numero.textContent = i;
 
+            // Adiciona o evento de clique diretamente aqui.
             numero.addEventListener("click", () => {
-                // Verificação de segurança: se o número está vendido, não faz nada.
+                // Verificação de segurança: se o número está vendido ou no carrinho, não faz nada.
                 if (numero.classList.contains("sold") || numero.classList.contains("in-cart")) {
                     numero.classList.add('shake-animation');
                     setTimeout(() => numero.classList.remove('shake-animation'), 400);
-                    return; 
+                    return;
                 }
-                
+
                 const numeroValue = parseInt(numero.textContent);
-                
+
                 if (!numero.classList.contains("selected") && numerosSelecionados.size >= MAX_POR_PESSOA) {
                     alert(`Você pode selecionar no máximo ${MAX_POR_PESSOA} números.`);
                     return;
                 }
-                
-                // Alterna a seleção
-                numero.classList.toggle("selected");
 
-                // Atualiza o Set de seleção global
+                // Alterna a seleção e atualiza o estado global.
+                numero.classList.toggle("selected");
                 if (numero.classList.contains("selected")) {
                     numerosSelecionados.add(numeroValue);
                 } else {
                     numerosSelecionados.delete(numeroValue);
                 }
-                
+
                 atualizarEstadoBotoes();
                 VerificaNumero();
             });
 
-            PainelNumero.appendChild(numero);
+            fragmento.appendChild(numero);
         }
 
-        // >>> ORDEM DE EXECUÇÃO CORRIGIDA <<<
-        setTimeout(async () => {
-            // 1. PRIMEIRO, busca e marca todos os números vendidos
-            await atualizarNumerosComprados(); 
+        // 5. Limpa o painel antigo e insere o novo conteúdo de uma só vez.
+        // Esta é a única manipulação pesada do DOM, tornando o processo muito mais rápido.
+        PainelNumero.innerHTML = "";
+        PainelNumero.appendChild(fragmento);
 
+        // 6. As tarefas de atualização de status (que podem ser mais lentas)
+        // são executadas de forma assíncrona em um novo setTimeout.
+        // Isso permite que a interface seja renderizada primeiro.
+        setTimeout(async () => {
+            // Primeiro, busca e marca os números vendidos (tarefa de rede).
+            await atualizarNumerosComprados();
+            // Depois, marca os números que já estão no carrinho.
             atualizarStatusNoCarrinho();
-            
-            // 2. DEPOIS, restaura a seleção dos números que sobraram (disponíveis)
+            // Por fim, restaura a seleção do usuário nos números disponíveis.
             restaurarSelecaoNaPagina();
-            
-            // 3. Finalmente, mostra o painel atualizado
+
+            // 7. Revela o painel já totalmente pronto com uma animação de fade-in.
             PainelNumero.style.opacity = "1";
             PainelNumero.style.transform = "translateY(0)";
-        }, 50);
-        
-    }, 150);
+        }, 0); // O timeout de 0ms adia a execução para o próximo ciclo de eventos.
+
+    }, 150); // Atraso para a animação de fade-out inicial.
 }
+
 
 
 
@@ -456,30 +468,66 @@ function carrinhoTemItens() {
     return itensCarrinho.length > 0;
 }
 
-// Validação completa do formulário e carrinho
+// >>> SUBSTITUA A FUNÇÃO ANTERIOR POR ESTA VERSÃO FINAL <<<
+// Validação completa do formulário e carrinho (VERSÃO FINAL COM E-MAIL)
 function validarFormularioCompleto() {
+    // Pega os valores e remove espaços em branco extras
     const nome = inputNome.value.trim();
     const cpf = InputCpf.value.trim();
     const telefone = InputPhone.value.trim();
-    
+    const email = InputEmail.value.trim(); // <<-- CAPTURA O VALOR DO E-MAIL
+
+    // Validações individuais para cada campo
     const nomeValido = nome.length >= 3;
-    const cpfValido = cpf.length === 14;
+    const cpfValido = validarCPF(cpf);
     const telefoneValido = telefone.length >= 14;
+    const emailValido = validarEmail(email); // <<-- USA A NOVA FUNÇÃO DE VALIDAÇÃO DE E-MAIL
     const carrinhoValido = carrinhoTemItens();
-    
-    const formularioCompleto = nomeValido && cpfValido && telefoneValido && carrinhoValido;
-    EndCompra.disabled = !formularioCompleto;
-    
-    if (!carrinhoValido && nomeValido && cpfValido && telefoneValido) {
-        EndCompra.title = "Adicione números ao carrinho para finalizar a compra";
-    } else if (!formularioCompleto) {
-        EndCompra.title = "Preencha todos os campos obrigatórios e adicione números ao carrinho";
+
+    // --- Feedback visual para o CPF ---
+    if (cpf.length > 0) {
+        InputCpf.classList.toggle('border-green-500', cpfValido);
+        InputCpf.classList.toggle('focus:ring-green-500', cpfValido);
+        InputCpf.classList.toggle('border-red-500', !cpfValido);
+        InputCpf.classList.toggle('focus:ring-red-500', !cpfValido);
     } else {
-        EndCompra.title = "Finalizar compra";
+        InputCpf.classList.remove('border-green-500', 'focus:ring-green-500', 'border-red-500', 'focus:ring-red-500');
     }
-    
+
+    // --- Feedback visual para o E-mail ---
+    if (email.length > 0) {
+        InputEmail.classList.toggle('border-green-500', emailValido);
+        InputEmail.classList.toggle('focus:ring-green-500', emailValido);
+        InputEmail.classList.toggle('border-red-500', !emailValido);
+        InputEmail.classList.toggle('focus:ring-red-500', !emailValido);
+    } else {
+        InputEmail.classList.remove('border-green-500', 'focus:ring-green-500', 'border-red-500', 'focus:ring-red-500');
+    }
+
+    // Verifica se TODAS as condições são verdadeiras
+    const formularioCompleto = nomeValido && cpfValido && telefoneValido && emailValido && carrinhoValido;
+
+    // Habilita ou desabilita o botão de finalizar compra
+    EndCompra.disabled = !formularioCompleto;
+
+    // Atualiza a mensagem de dica (tooltip) do botão para guiar o usuário
+    if (!carrinhoValido) {
+        EndCompra.title = "Seu carrinho está vazio. Adicione números para continuar.";
+    } else if (!nomeValido) {
+        EndCompra.title = "Por favor, preencha seu nome completo.";
+    } else if (!cpfValido) {
+        EndCompra.title = "O CPF informado é inválido.";
+    } else if (!telefoneValido) {
+        EndCompra.title = "Por favor, preencha um telefone válido.";
+    } else if (!emailValido) {
+        EndCompra.title = "Por favor, insira um e-mail válido."; // <<-- NOVA MENSAGEM DE DICA
+    } else {
+        EndCompra.title = "Tudo pronto para finalizar a compra!";
+    }
+
     return formularioCompleto;
 }
+
 
 // Evento para adicionar os itens ao carrinho
 botao.addEventListener("click", () => {
@@ -1022,6 +1070,57 @@ function atualizarStatusNoCarrinho() {
         }
     });
 }
+
+function validarCPF(cpf) {
+    // Remove caracteres não numéricos (pontos e traço)
+    cpf = cpf.replace(/[^\d]+/g, '');
+
+    // 1. Verifica se o CPF tem 11 dígitos ou se é uma sequência de números iguais (ex: 111.111.111-11)
+    if (cpf.length !== 11 || /^(\d)\1{10}$/.test(cpf)) {
+        return false;
+    }
+
+    let soma = 0;
+    let resto;
+
+    // 2. Validação do primeiro dígito verificador
+    for (let i = 1; i <= 9; i++) {
+        soma += parseInt(cpf.substring(i - 1, i)) * (11 - i);
+    }
+    resto = (soma * 10) % 11;
+    if ((resto === 10) || (resto === 11)) {
+        resto = 0;
+    }
+    if (resto !== parseInt(cpf.substring(9, 10))) {
+        return false;
+    }
+
+    // 3. Validação do segundo dígito verificador
+    soma = 0;
+    for (let i = 1; i <= 10; i++) {
+        soma += parseInt(cpf.substring(i - 1, i)) * (12 - i);
+    }
+    resto = (soma * 10) % 11;
+    if ((resto === 10) || (resto === 11)) {
+        resto = 0;
+    }
+    if (resto !== parseInt(cpf.substring(10, 11))) {
+        return false;
+    }
+
+    // Se passou por todas as verificações, o CPF é válido
+    return true;
+}
+
+// >>> ADICIONE ESTA NOVA FUNÇÃO <<<
+// Função para validar o formato de um endereço de e-mail
+function validarEmail(email) {
+    // Expressão regular para validar o formato de e-mail.
+    // Garante que há caracteres antes e depois do @, e um domínio com ponto.
+    const re = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
+    return re.test(String(email).toLowerCase());
+}
+
 
 
 
