@@ -864,6 +864,7 @@ const searchCPFInput = document.getElementById('searchCPF');
 const searchButton = document.getElementById('searchButton');
 const purchasedNumbersResults = document.getElementById('purchasedNumbersResults');
 
+// Mude o event listener para o botão de busca
 searchButton.addEventListener('click', async () => {
     const cpf = searchCPFInput.value.trim();
 
@@ -890,12 +891,18 @@ searchButton.addEventListener('click', async () => {
             if (data.numeros && data.numeros.length > 0) {
                 const numerosFormatados = data.numeros.map(num => `<span class="inline-block bg-blue-100 text-blue-800 text-sm font-semibold px-3 py-1 rounded-full m-1">${num}</span>`).join('');
                 purchasedNumbersResults.innerHTML = `
-                    <h4 class="text-lg font-semibold mb-2">Números encontrados para ${data.cpf}:</h4>
+                    <div class="bg-green-50 border border-green-200 p-4 rounded-md mb-4">
+                        <h4 class="text-lg font-semibold mb-2 text-green-800">Dados do Cliente:</h4>
+                        <p class="text-sm text-gray-700"><strong>Nome:</strong> ${data.nome}</p>
+                        <p class="text-sm text-gray-700"><strong>CPF:</strong> ${data.cpf}</p>
+                        <p class="text-sm text-gray-700"><strong>Total de números:</strong> ${data.total_numeros}</p>
+                    </div>
+                    <h4 class="text-lg font-semibold mb-2">Números comprados:</h4>
                     <div class="flex flex-wrap justify-center p-4 border rounded-md bg-gray-50">
                         ${numerosFormatados}
                     </div>
                 `;
-            } else {
+            } else {    
                 purchasedNumbersResults.innerHTML = '<div class="text-center text-gray-500 italic py-8">Nenhum número encontrado para o CPF informado.</div>';
             }
         } else {
@@ -906,6 +913,7 @@ searchButton.addEventListener('click', async () => {
         purchasedNumbersResults.innerHTML = '<div class="text-center text-red-500 italic py-8">Erro na comunicação com o servidor. Tente novamente mais tarde.</div>';
     }
 });
+
 
 // Abre e fecha o modal de números comprados
 const purchasedNumbersModal = document.getElementById('purchasedNumbersModal');
