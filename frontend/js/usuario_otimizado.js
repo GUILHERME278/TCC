@@ -914,6 +914,27 @@ searchButton.addEventListener('click', async () => {
     }
 });
 
+// Função para redefinir o estado do modal de busca
+function resetPurchasedNumbersModal() {
+    const searchCPFInput = document.getElementById('searchCPF');
+    const purchasedNumbersResults = document.getElementById('purchasedNumbersResults');
+
+    // 1. Limpa o campo de input do CPF
+    if (searchCPFInput) {
+        searchCPFInput.value = '';
+    }
+
+    // 2. Restaura a mensagem inicial na área de resultados
+    if (purchasedNumbersResults) {
+        purchasedNumbersResults.innerHTML = `
+            <div class="text-center text-gray-500 italic py-8">
+                Informe seu CPF para visualizar seus números comprados
+            </div>
+        `;
+    }
+}
+
+
 
 // Abre e fecha o modal de números comprados
 const purchasedNumbersModal = document.getElementById('purchasedNumbersModal');
@@ -928,6 +949,7 @@ openPurchasedNumbersModalBtn.addEventListener('click', () => {
 closePurchasedNumbersModalBtn.addEventListener('click', () => {
     purchasedNumbersModal.classList.add('hidden');
     purchasedNumbersModal.classList.remove('flex');
+    resetPurchasedNumbersModal();
 });
 
 // Fecha o modal ao clicar fora dele
@@ -935,6 +957,7 @@ window.addEventListener('click', (event) => {
     if (event.target === purchasedNumbersModal) {
         purchasedNumbersModal.classList.add('hidden');
         purchasedNumbersModal.classList.remove('flex');
+        resetPurchasedNumbersModal();
     }
 });
 
@@ -1080,39 +1103,44 @@ function atualizarStatusNoCarrinho() {
 }
 
 function validarCPF(cpf) {
-    // Remove caracteres não numéricos (pontos e traço)
-    cpf = cpf.replace(/[^\d]+/g, '');
+    // Remove todos os caracteres que não são dígitos
+    const cpfLimpo = cpf.replace(/\D/g, '');
 
-    // 1. Verifica se o CPF tem 11 dígitos ou se é uma sequência de números iguais (ex: 111.111.111-11)
-    if (cpf.length !== 11 || /^(\d)\1{10}$/.test(cpf)) {
+    // 1. Verifica se o CPF tem 11 dígitos ou se é uma sequência de números iguais
+    if (cpfLimpo.length !== 11 || /^(\d)\1{10}$/.test(cpfLimpo)) {
         return false;
     }
 
+    // Converte a string em um array de números para facilitar os cálculos
+    const digitos = cpfLimpo.split('').map(Number);
+
+    // --- Cálculo do 1º Dígito Verificador ---
+    // Multiplica os 9 primeiros dígitos pela sequência regressiva de 10 a 2
     let soma = 0;
-    let resto;
+    for (let i = 0; i < 9; i++) {
+        soma += digitos[i] * (10 - i);
+    }
 
-    // 2. Validação do primeiro dígito verificador
-    for (let i = 1; i <= 9; i++) {
-        soma += parseInt(cpf.substring(i - 1, i)) * (11 - i);
-    }
-    resto = (soma * 10) % 11;
-    if ((resto === 10) || (resto === 11)) {
-        resto = 0;
-    }
-    if (resto !== parseInt(cpf.substring(9, 10))) {
+    let resto = soma % 11;
+    let digitoVerificador1 = (resto < 2) ? 0 : 11 - resto;
+
+    // Compara o dígito calculado com o 10º dígito do CPF
+    if (digitos[9] !== digitoVerificador1) {
         return false;
     }
 
-    // 3. Validação do segundo dígito verificador
+    // --- Cálculo do 2º Dígito Verificador ---
+    // Multiplica os 10 primeiros dígitos (incluindo o 1º dígito verificador) pela sequência de 11 a 2
     soma = 0;
-    for (let i = 1; i <= 10; i++) {
-        soma += parseInt(cpf.substring(i - 1, i)) * (12 - i);
+    for (let i = 0; i < 10; i++) {
+        soma += digitos[i] * (11 - i);
     }
-    resto = (soma * 10) % 11;
-    if ((resto === 10) || (resto === 11)) {
-        resto = 0;
-    }
-    if (resto !== parseInt(cpf.substring(10, 11))) {
+
+    resto = soma % 11;
+    let digitoVerificador2 = (resto < 2) ? 0 : 11 - resto;
+
+    // Compara o dígito calculado com o 11º dígito do CPF
+    if (digitos[10] !== digitoVerificador2) {
         return false;
     }
 

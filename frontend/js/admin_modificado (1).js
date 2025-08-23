@@ -569,34 +569,74 @@ document.getElementById('cancel-edit-sale').addEventListener('click', () => {
     document.getElementById('edit-sale-modal').classList.add('hidden');
 });
 
-// Função para realizar sorteio
-document.getElementById('draw-button').addEventListener('click', function () {
-    const config = loadRaffleConfig();
-    const soldNumbers = salesData.flatMap(sale => sale.numbers);
+function mensagem() {
+    console.log("--- INICIANDO PROCESSO DE SORTEIO ---");
 
-    if (soldNumbers.length === 0) {
-        alert('Não há números vendidos para realizar o sorteio!');
+    // 1. Verifica se a lista principal de vendas (salesData) existe e tem itens.
+    console.log("1. Verificando a lista principal de vendas (salesData):", salesData);
+    if (!salesData || salesData.length === 0) {
+        alert("DIAGNÓSTICO: A lista principal de vendas está vazia. Verifique se os dados estão sendo carregados do servidor.");
+        console.error("ERRO: A variável 'salesData' está vazia ou nula.");
         return;
     }
 
-    // Sorteia um número aleatório entre os vendidos
-    const winnerNumber = soldNumbers[Math.floor(Math.random() * soldNumbers.length)];
-    const winner = salesData.find(sale => sale.numbers.includes(winnerNumber));
+    // 2. Filtra apenas as vendas com status "pago".
+    const paidSales = salesData.filter(sale => sale.status === 'pago');
+    console.log("2. Vendas filtradas com status 'pago':", paidSales);
 
-    // Exibe o resultado
+    if (paidSales.length === 0) {
+        alert('DIAGNÓSTICO: Não há nenhuma venda com status "pago" para realizar o sorteio! Verifique a aba "Vendas" e confirme se há participantes pagos.');
+        console.warn("AVISO: Nenhuma venda 'paga' encontrada.");
+        return;
+    }
+
+    // 3. Cria a lista de todos os números elegíveis.
+    const eligibleNumbers = paidSales.flatMap(sale => sale.numbers);
+    console.log("3. Lista de todos os números elegíveis para o sorteio:", eligibleNumbers);
+
+    if (eligibleNumbers.length === 0) {
+        alert('DIAGNÓSTICO: Embora existam vendas pagas, a lista de números está vazia. Verifique se os dados dos números estão corretos.');
+        console.error("ERRO: A lista 'eligibleNumbers' está vazia.");
+        return;
+    }
+
+    // 4. Sorteia um número aleatório.
+    const winnerNumber = eligibleNumbers[Math.floor(Math.random() * eligibleNumbers.length)];
+    console.log("4. Número sorteado:", winnerNumber);
+
+    // 5. Encontra os dados completos do ganhador.
+    const winner = paidSales.find(sale => sale.numbers.includes(winnerNumber));
+    console.log("5. Dados do ganhador encontrado:", winner);
+
+    if (!winner) {
+        alert('Ocorreu um erro crítico ao identificar o ganhador. Tente novamente.');
+        console.error("ERRO CRÍTICO: Ganhador não encontrado para o número sorteado.", { winnerNumber, paidSales });
+        return;
+    }
+
+    // 6. Se tudo deu certo, exibe o resultado na tela.
+    console.log("6. Sorteio bem-sucedido! Exibindo resultados...");
     document.getElementById('winner-number').textContent = winnerNumber.toString().padStart(2, '0');
     document.getElementById('winner-name').textContent = winner.name;
     document.getElementById('winner-phone').textContent = winner.phone;
     document.getElementById('winner-section').classList.remove('hidden');
 
-    // Salva o resultado do sorteio
-    const drawResult = {
-        number: winnerNumber,
-        winner: winner,
-        date: new Date().toLocaleDateString('pt-BR')
-    };
+    // ... (resto do seu código para o botão do WhatsApp e salvar no localStorage) ...
+    const whatsappButton = document.getElementById('whatsapp-winner');
+    whatsappButton.classList.remove('hidden');
+    const cleanPhoneNumber = winner.phone.replace(/\D/g, '');
+    const winnerName = winner.name.split(' ')[0];
+    const rafflePrize = loadRaffleConfig().prize;
+    const message = `Olá, ${winnerName}! Parabéns! Você foi o(a) ganhador(a) do prêmio "${rafflePrize}" com o número ${winnerNumber}. Entramos em contato para combinar a entrega.`;
+    whatsappButton.href = `https://wa.me/55${cleanPhoneNumber}?text=${encodeURIComponent(message )}`;
+    const drawResult = { number: winnerNumber, winner: winner, date: new Date().toLocaleDateString('pt-BR') };
     localStorage.setItem('drawResult', JSON.stringify(drawResult));
-});
+    console.log("--- PROCESSO DE SORTEIO FINALIZADO ---");
+}
+
+
+
+
 
 // Função para imprimir resultado
 document.getElementById('print-winner').addEventListener('click', function () {
