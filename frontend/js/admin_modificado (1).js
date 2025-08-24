@@ -163,11 +163,15 @@ async function fetchSalesFromDatabase() {
         const data = await response.json();
 
         if (data.novos_dados) {
-            salesData = data.vendas;
+            // força todos os status para "pago"
+            salesData = data.vendas.map(sale => {
+                return { ...sale, status: "pago" };
+            });
+
             currentSalesCount = salesData.length;
             renderSales();
             updateStatistics();
-            console.log('Dados atualizados do banco de dados:', salesData);
+            console.log('Dados atualizados do banco de dados (todos pagos):', salesData);
         }
     } catch (error) {
         console.error('Erro ao buscar vendas do banco de dados:', error);
@@ -573,67 +577,53 @@ function mensagem() {
     console.log("--- INICIANDO PROCESSO DE SORTEIO ---");
 
     // 1. Verifica se a lista principal de vendas (salesData) existe e tem itens.
-    console.log("1. Verificando a lista principal de vendas (salesData):", salesData);
     if (!salesData || salesData.length === 0) {
-        alert("DIAGNÓSTICO: A lista principal de vendas está vazia. Verifique se os dados estão sendo carregados do servidor.");
-        console.error("ERRO: A variável 'salesData' está vazia ou nula.");
+        alert("Nenhuma venda encontrada. Verifique se os dados estão sendo carregados.");
         return;
     }
 
-    // 2. Filtra apenas as vendas com status "pago".
-    const paidSales = salesData.filter(sale => sale.status === 'pago');
-    console.log("2. Vendas filtradas com status 'pago':", paidSales);
-
-    if (paidSales.length === 0) {
-        alert('DIAGNÓSTICO: Não há nenhuma venda com status "pago" para realizar o sorteio! Verifique a aba "Vendas" e confirme se há participantes pagos.');
-        console.warn("AVISO: Nenhuma venda 'paga' encontrada.");
-        return;
-    }
+    // 2. Usa TODAS as vendas, sem filtrar por status
+    const allSales = salesData;
+    console.log("Vendas consideradas para o sorteio:", allSales);
 
     // 3. Cria a lista de todos os números elegíveis.
-    const eligibleNumbers = paidSales.flatMap(sale => sale.numbers);
-    console.log("3. Lista de todos os números elegíveis para o sorteio:", eligibleNumbers);
-
+    const eligibleNumbers = allSales.flatMap(sale => sale.numbers);
     if (eligibleNumbers.length === 0) {
-        alert('DIAGNÓSTICO: Embora existam vendas pagas, a lista de números está vazia. Verifique se os dados dos números estão corretos.');
-        console.error("ERRO: A lista 'eligibleNumbers' está vazia.");
+        alert('Nenhum número encontrado para realizar o sorteio!');
         return;
     }
 
     // 4. Sorteia um número aleatório.
     const winnerNumber = eligibleNumbers[Math.floor(Math.random() * eligibleNumbers.length)];
-    console.log("4. Número sorteado:", winnerNumber);
+    console.log("Número sorteado:", winnerNumber);
 
     // 5. Encontra os dados completos do ganhador.
-    const winner = paidSales.find(sale => sale.numbers.includes(winnerNumber));
-    console.log("5. Dados do ganhador encontrado:", winner);
+    const winner = allSales.find(sale => sale.numbers.includes(winnerNumber));
 
     if (!winner) {
-        alert('Ocorreu um erro crítico ao identificar o ganhador. Tente novamente.');
-        console.error("ERRO CRÍTICO: Ganhador não encontrado para o número sorteado.", { winnerNumber, paidSales });
+        alert('Erro ao identificar o ganhador. Tente novamente.');
         return;
     }
 
-    // 6. Se tudo deu certo, exibe o resultado na tela.
-    console.log("6. Sorteio bem-sucedido! Exibindo resultados...");
+    // 6. Exibe o resultado
     document.getElementById('winner-number').textContent = winnerNumber.toString().padStart(2, '0');
     document.getElementById('winner-name').textContent = winner.name;
     document.getElementById('winner-phone').textContent = winner.phone;
     document.getElementById('winner-section').classList.remove('hidden');
 
-    // ... (resto do seu código para o botão do WhatsApp e salvar no localStorage) ...
+    // Botão WhatsApp
     const whatsappButton = document.getElementById('whatsapp-winner');
     whatsappButton.classList.remove('hidden');
     const cleanPhoneNumber = winner.phone.replace(/\D/g, '');
     const winnerName = winner.name.split(' ')[0];
     const rafflePrize = loadRaffleConfig().prize;
     const message = `Olá, ${winnerName}! Parabéns! Você foi o(a) ganhador(a) do prêmio "${rafflePrize}" com o número ${winnerNumber}. Entramos em contato para combinar a entrega.`;
-    whatsappButton.href = `https://wa.me/55${cleanPhoneNumber}?text=${encodeURIComponent(message )}`;
+    whatsappButton.href = `https://wa.me/55${cleanPhoneNumber}?text=${encodeURIComponent(message)}`;
+
+    // Salva resultado no localStorage
     const drawResult = { number: winnerNumber, winner: winner, date: new Date().toLocaleDateString('pt-BR') };
     localStorage.setItem('drawResult', JSON.stringify(drawResult));
-    console.log("--- PROCESSO DE SORTEIO FINALIZADO ---");
 }
-
 
 
 
