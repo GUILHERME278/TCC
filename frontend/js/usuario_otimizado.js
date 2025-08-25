@@ -1,6 +1,4 @@
-
-
-// NOVA FUNCIONALIDADE: Configurações padrão da rifa (fallback)
+// Configurações padrão da rifa (fallback) - Usadas se não houver configuração salva no Local Storage.
 const defaultRaffleConfig = {
     title: "Rifa Beneficente",
     description: "Ajude nossa causa e concorra a prêmios incríveis!",
@@ -11,7 +9,8 @@ const defaultRaffleConfig = {
     image: "./img/carro-completo.jpeg"
 };
 
-// NOVA FUNCIONALIDADE: Função para carregar configurações do Local Storage
+// Função para carregar as configurações da rifa do Local Storage.
+// Se não houver configurações salvas ou houver erro na leitura, retorna as configurações padrão.
 function loadRaffleConfig() {
     const savedConfig = localStorage.getItem("raffleConfig");
     if (savedConfig) {
@@ -25,30 +24,28 @@ function loadRaffleConfig() {
     return defaultRaffleConfig;
 }
 
-// Variáveis globais que serão atualizadas dinamicamente
+// Variáveis globais que armazenam os valores da configuração da rifa e o estado da navegação.
 let PRECO_POR_NUMERO;
 let TOTAL_NUMEROS;
 let MAX_POR_PESSOA;
 let TOTAL_PAGINAS;
 let paginaAtual = 0;
-// ... (outras variáveis globais) ...
 
-// Array para armazenar números selecionados globalmente
+// Set para armazenar os números selecionados pelo usuário na interface.
 let numerosSelecionados = new Set();
 
-// >>> ADICIONE ESTA NOVA VARIÁVEL <<<
-// Set para rastrear todos os números que já estão no carrinho
+// Set para rastrear todos os números que já estão no carrinho de compras.
 let numerosNoCarrinho = new Set(); 
 
-
-// NOVA FUNCIONALIDADE: Variável para armazenar a configuração atual (para comparação)
+// Cache da configuração atual da rifa para otimizar as atualizações.
 let configAtualCache = null;
 
-// NOVA FUNCIONALIDADE: Função otimizada para aplicar apenas mudanças específicas
+// Função otimizada para aplicar as configurações da rifa, atualizando apenas os elementos que mudaram.
+// Se 'forceUpdate' for verdadeiro ou for a primeira vez, aplica todas as configurações.
 function applyRaffleConfigOptimized(forceUpdate = false) {
     const config = loadRaffleConfig();
     
-    // Se é a primeira vez ou forçado, aplica tudo
+    // Aplica todas as configurações se for a primeira vez ou se a atualização for forçada.
     if (!configAtualCache || forceUpdate) {
         applyFullRaffleConfig(config);
         configAtualCache = { ...config };
@@ -58,9 +55,9 @@ function applyRaffleConfigOptimized(forceUpdate = false) {
     let needsGridUpdate = false;
     let needsDotsUpdate = false;
     
-    // Verifica mudanças específicas e aplica apenas o necessário
+    // Verifica e aplica mudanças específicas para otimizar a renderização.
     
-    // 1. Atualiza título se mudou
+    // 1. Atualiza o título da rifa se houver mudança.
     if (config.title !== configAtualCache.title) {
         const titleElement = document.querySelector("h2");
         if (titleElement) {
@@ -68,7 +65,7 @@ function applyRaffleConfigOptimized(forceUpdate = false) {
         }
     }
     
-    // 2. Atualiza descrição se mudou
+    // 2. Atualiza a descrição da rifa se houver mudança.
     if (config.description !== configAtualCache.description) {
         const descriptionElement = document.querySelector("p");
         if (descriptionElement) {
@@ -76,7 +73,7 @@ function applyRaffleConfigOptimized(forceUpdate = false) {
         }
     }
     
-    // 3. Atualiza informações de prêmio e valores se mudaram
+    // 3. Atualiza informações do prêmio e valores se houver mudança.
     if (config.prize !== configAtualCache.prize ||
         config.totalNumbers !== configAtualCache.totalNumbers ||
         config.pricePerNumber !== configAtualCache.pricePerNumber ||
@@ -99,7 +96,7 @@ function applyRaffleConfigOptimized(forceUpdate = false) {
         });
     }
     
-    // 4. Atualiza imagem se mudou
+    // 4. Atualiza a imagem da rifa se houver mudança.
     if (config.image !== configAtualCache.image) {
         const imageElement = document.querySelector("img[alt=\"Imagem da rifa\"]");
         if (imageElement && config.image) {
@@ -107,30 +104,31 @@ function applyRaffleConfigOptimized(forceUpdate = false) {
         }
     }
     
-    // 5. Verifica se precisa atualizar variáveis globais e grid
+    // 5. Verifica se precisa atualizar variáveis globais e o grid de números.
     if (config.totalNumbers !== configAtualCache.totalNumbers) {
         TOTAL_NUMEROS = config.totalNumbers;
         TOTAL_PAGINAS = Math.ceil(TOTAL_NUMEROS / NUMEROS_POR_PAGINA);
         needsGridUpdate = true;
         needsDotsUpdate = true;
         
-        // Se o total de números mudou, pode precisar ajustar a página atual
+        // Ajusta a página atual se o total de números mudar e a página atual for inválida.
         if (paginaAtual >= TOTAL_PAGINAS) {
             paginaAtual = TOTAL_PAGINAS - 1;
         }
     }
     
+    // Atualiza o preço por número e recalcula o total da seleção.
     if (config.pricePerNumber !== configAtualCache.pricePerNumber) {
         PRECO_POR_NUMERO = config.pricePerNumber;
-        // Atualiza o preço da seleção atual sem re-renderizar o grid
         VerificaNumero();
     }
     
+    // Atualiza o máximo de números por pessoa.
     if (config.maxPerPerson !== configAtualCache.maxPerPerson) {
         MAX_POR_PESSOA = config.maxPerPerson;
     }
     
-    // 6. Aplica atualizações necessárias apenas se realmente precisar
+    // 6. Aplica as atualizações necessárias no grid e nos dots de navegação.
     if (needsGridUpdate) {
         renderizarPagina(paginaAtual);
     }
@@ -140,27 +138,27 @@ function applyRaffleConfigOptimized(forceUpdate = false) {
         atualizarSetas();
     }
     
-    // Atualiza o cache
+    // Atualiza o cache com a nova configuração.
     configAtualCache = { ...config };
     
     console.log("Configurações aplicadas (otimizado):", config);
 }
 
-// NOVA FUNCIONALIDADE: Função para aplicar configurações completas (primeira vez)
+// Função para aplicar todas as configurações da rifa (usada na inicialização ou em atualizações forçadas).
 function applyFullRaffleConfig(config) {
-    // Atualiza título da rifa
+    // Atualiza o título da rifa.
     const titleElement = document.querySelector("h2");
     if (titleElement) {
         titleElement.textContent = config.title;
     }
     
-    // Atualiza descrição
+    // Atualiza a descrição da rifa.
     const descriptionElement = document.querySelector("p");
     if (descriptionElement) {
         descriptionElement.textContent = config.description;
     }
     
-    // Atualiza prêmio e outras informações
+    // Atualiza informações do prêmio e outros detalhes.
     const prizeElements = document.querySelectorAll("p");
     prizeElements.forEach(el => {
         if (el.textContent.includes("Prêmio:")) {
@@ -177,13 +175,13 @@ function applyFullRaffleConfig(config) {
         }
     });
     
-    // Atualiza imagem se houver
+    // Atualiza a imagem da rifa.
     const imageElement = document.querySelector("img[alt=\"Imagem da rifa\"]");
     if (imageElement && config.image) {
         imageElement.src = config.image;
     }
     
-    // Atualiza variáveis globais
+    // Atualiza as variáveis globais com os novos valores.
     PRECO_POR_NUMERO = config.pricePerNumber;
     TOTAL_NUMEROS = config.totalNumbers;
     MAX_POR_PESSOA = config.maxPerPerson;
@@ -191,14 +189,14 @@ function applyFullRaffleConfig(config) {
 
     console.log("Configurações aplicadas (completo):", config);
 
-    // Renderiza a página e elementos relacionados
+    // Renderiza a página, gera os dots de navegação e atualiza as setas.
     renderizarPagina(paginaAtual);
     gerarDots();
     atualizarSetas();
     VerificaNumero();
 }
 
-// Constantes principais
+// Constantes que referenciam elementos do DOM.
 const PainelNumero = document.getElementById("numbers-grid");
 const botao = document.getElementById("add-to-cart");
 const preco = document.getElementById("total-price");
@@ -210,13 +208,10 @@ const InputPhone = document.getElementById("buyer-phone");
 const InputEmail = document.getElementById("buyer-email");
 const EndCompra = document.getElementById("checkout-btn");
 const totalCarrinho = document.getElementById("cart-total");
-const NUMEROS_POR_PAGINA = 100;
-const menuDots = document.querySelector(".menu") || document.querySelector(".menu-small");
+const NUMEROS_POR_PAGINA = 100; // Define quantos números são exibidos por página.
+const menuDots = document.querySelector(".menu") || document.querySelector(".menu-small"); // Elemento para os dots de navegação.
 
-// Array para armazenar números selecionados globalmente
-let numerosselecionados = new Set();
-
-// Função para salvar seleção atual antes de trocar de página
+// Função para salvar os números selecionados pelo usuário antes de mudar de página.
 function salvarSelecaoAtual() {
     const selecionadosNaPagina = document.querySelectorAll(".number-item.selected");
     selecionadosNaPagina.forEach(elemento => {
@@ -225,7 +220,7 @@ function salvarSelecaoAtual() {
     });
 }
 
-// Função para restaurar seleção na página atual
+// Função para restaurar a seleção do usuário na página atual após a renderização.
 function restaurarSelecaoNaPagina() {
     const numerosNaPagina = document.querySelectorAll(".number-item");
     numerosNaPagina.forEach(elemento => {
@@ -239,14 +234,14 @@ function restaurarSelecaoNaPagina() {
     VerificaNumero();
 }
 
-// Função para atualizar estado dos botões baseado na seleção global
+// Função para atualizar o estado (habilitado/desabilitado) dos botões de ação.
 function atualizarEstadoBotoes() {
     const algumSelecionado = numerosSelecionados.size > 0;
     botao.disabled = !algumSelecionado;
     LimparSelecao.disabled = !algumSelecionado;
 }
 
-// Função para gerar os dots de navegação
+// Função para gerar os indicadores de página (dots) na navegação.
 function gerarDots() {
     menuDots.innerHTML = "";
 
@@ -270,19 +265,19 @@ function gerarDots() {
     }
 }
 
-// Função para navegar para uma página específica
+// Função para navegar para uma página específica da rifa.
 function navegarParaPagina(novaPagina) {
-    salvarSelecaoAtual();
+    salvarSelecaoAtual(); // Salva a seleção atual antes de mudar de página.
     
     const paginaAnterior = paginaAtual;
     paginaAtual = novaPagina;
     
-    renderizarPagina(paginaAtual);
-    atualizarDotsAtivos(paginaAnterior, paginaAtual);
-    atualizarSetas();
+    renderizarPagina(paginaAtual); // Renderiza a nova página.
+    atualizarDotsAtivos(paginaAnterior, paginaAtual); // Atualiza o dot ativo.
+    atualizarSetas(); // Atualiza o estado das setas de navegação.
 }
 
-// Função para atualizar os dots ativos com animação
+// Função para atualizar a classe 'active' dos dots de navegação com uma animação.
 function atualizarDotsAtivos(paginaAnterior, paginaAtual) {
     const todosDots = document.querySelectorAll(".dot");
     
@@ -302,46 +297,46 @@ function atualizarDotsAtivos(paginaAnterior, paginaAtual) {
     });
 }
 
-// Função para gerar os números da página atual (VERSÃO OTIMIZADA)
+// Função para renderizar os números da página atual no grid (otimizada para performance).
 function renderizarPagina(pagina) {
     // 1. Inicia a animação de fade-out para uma transição suave.
     PainelNumero.style.opacity = "0";
     PainelNumero.style.transform = "translateY(10px)";
 
     // 2. Usa setTimeout para permitir que a animação de fade-out comece
-    // antes de o navegador congelar para processar o loop.
+    // antes de o navegador processar o loop de renderização.
     setTimeout(() => {
-        // 3. Cria um "DocumentFragment", que é um contêiner de DOM leve e fora da tela.
-        // Isso permite construir todos os novos elementos em memória, sem causar
-        // reflows/repaints a cada `appendChild`.
+        // 3. Cria um DocumentFragment para construir os elementos fora do DOM principal,
+        // minimizando reflows e repaints.
         const fragmento = document.createDocumentFragment();
 
         const inicio = pagina * NUMEROS_POR_PAGINA + 1;
         const fim = Math.min(inicio + NUMEROS_POR_PAGINA - 1, TOTAL_NUMEROS);
 
-        // 4. Gera todos os números da página e os adiciona ao fragmento (operação rápida em memória).
+        // 4. Gera todos os números da página e os adiciona ao fragmento.
         for (let i = inicio; i <= fim; i++) {
             const numero = document.createElement("div");
             numero.classList.add("number-item");
             numero.textContent = i;
 
-            // Adiciona o evento de clique diretamente aqui.
+            // Adiciona o evento de clique para cada número.
             numero.addEventListener("click", () => {
-                // Verificação de segurança: se o número está vendido ou no carrinho, não faz nada.
+                // Impede a seleção se o número já estiver vendido ou no carrinho.
                 if (numero.classList.contains("sold") || numero.classList.contains("in-cart")) {
-                    numero.classList.add('shake-animation');
-                    setTimeout(() => numero.classList.remove('shake-animation'), 400);
+                    numero.classList.add("shake-animation");
+                    setTimeout(() => numero.classList.remove("shake-animation"), 400);
                     return;
                 }
 
                 const numeroValue = parseInt(numero.textContent);
 
+                // Limita a seleção de números por pessoa.
                 if (!numero.classList.contains("selected") && numerosSelecionados.size >= MAX_POR_PESSOA) {
                     alert(`Você pode selecionar no máximo ${MAX_POR_PESSOA} números.`);
                     return;
                 }
 
-                // Alterna a seleção e atualiza o estado global.
+                // Alterna a seleção do número e atualiza o Set global.
                 numero.classList.toggle("selected");
                 if (numero.classList.contains("selected")) {
                     numerosSelecionados.add(numeroValue);
@@ -356,34 +351,25 @@ function renderizarPagina(pagina) {
             fragmento.appendChild(numero);
         }
 
-        // 5. Limpa o painel antigo e insere o novo conteúdo de uma só vez.
-        // Esta é a única manipulação pesada do DOM, tornando o processo muito mais rápido.
+        // 5. Limpa o painel antigo e insere o novo conteúdo de uma só vez, otimizando o DOM.
         PainelNumero.innerHTML = "";
         PainelNumero.appendChild(fragmento);
 
-        // 6. As tarefas de atualização de status (que podem ser mais lentas)
-        // são executadas de forma assíncrona em um novo setTimeout.
-        // Isso permite que a interface seja renderizada primeiro.
+        // 6. Executa tarefas de atualização de status de forma assíncrona para não bloquear a UI.
         setTimeout(async () => {
-            // Primeiro, busca e marca os números vendidos (tarefa de rede).
-            await atualizarNumerosComprados();
-            // Depois, marca os números que já estão no carrinho.
-            atualizarStatusNoCarrinho();
-            // Por fim, restaura a seleção do usuário nos números disponíveis.
-            restaurarSelecaoNaPagina();
+            await atualizarNumerosComprados(); // Busca e marca números vendidos.
+            atualizarStatusNoCarrinho(); // Marca números no carrinho.
+            restaurarSelecaoNaPagina(); // Restaura a seleção do usuário.
 
-            // 7. Revela o painel já totalmente pronto com uma animação de fade-in.
+            // 7. Revela o painel com uma animação de fade-in.
             PainelNumero.style.opacity = "1";
             PainelNumero.style.transform = "translateY(0)";
-        }, 0); // O timeout de 0ms adia a execução para o próximo ciclo de eventos.
+        }, 0); 
 
-    }, 150); // Atraso para a animação de fade-out inicial.
+    }, 150); 
 }
 
-
-
-
-// Atualiza o estado das setas
+// Atualiza o estado (habilitado/desabilitado) das setas de navegação de página.
 function atualizarSetas() {
     const prevButton = document.getElementById("prev-numbers");
     const nextButton = document.getElementById("next-numbers");
@@ -391,6 +377,7 @@ function atualizarSetas() {
     prevButton.disabled = paginaAtual === 0;
     nextButton.disabled = paginaAtual >= TOTAL_PAGINAS - 1;
     
+    // Altera a opacidade das setas para indicar o estado.
     if (prevButton.disabled) {
         prevButton.style.opacity = "0.5";
     } else {
@@ -404,7 +391,7 @@ function atualizarSetas() {
     }
 }
 
-// Event listeners para as setas
+// Event listeners para os botões de navegação (setas).
 const prevButton = document.getElementById("prev-numbers");
 const nextButton = document.getElementById("next-numbers");
 
@@ -420,9 +407,9 @@ nextButton.addEventListener("click", () => {
     }
 });
 
-// Navegação por teclado
+// Navegação por teclado (setas esquerda/direita).
 document.addEventListener("keydown", (e) => {
-    if (document.activeElement.tagName !== "INPUT") {
+    if (document.activeElement.tagName !== "INPUT") { // Ignora se o foco estiver em um campo de input.
         if (e.key === "ArrowLeft" && paginaAtual > 0) {
             e.preventDefault();
             navegarParaPagina(paginaAtual - 1);
@@ -433,7 +420,7 @@ document.addEventListener("keydown", (e) => {
     }
 });
 
-// Atualiza o preço total baseado na seleção global
+// Atualiza o preço total exibido com base nos números selecionados.
 function VerificaNumero() {
     const quantidade = numerosSelecionados.size;
     const PrecoFinal = quantidade * PRECO_POR_NUMERO;
@@ -443,7 +430,7 @@ function VerificaNumero() {
     });
 }
 
-// Função para calcular o total do carrinho
+// Função para calcular o total dos itens no carrinho.
 function calcularTotalCarrinho() {
     const itensCarrinho = ListaDeItens.querySelectorAll("tr:not(#empty-cart-row)");
     let total = 0;
@@ -462,55 +449,67 @@ function calcularTotalCarrinho() {
     return total;
 }
 
-// Função para verificar se o carrinho tem itens
+// Função para verificar se há itens no carrinho.
 function carrinhoTemItens() {
     const itensCarrinho = ListaDeItens.querySelectorAll("tr:not(#empty-cart-row)");
     return itensCarrinho.length > 0;
 }
 
-// >>> SUBSTITUA A FUNÇÃO ANTERIOR POR ESTA VERSÃO FINAL <<<
-// Validação completa do formulário e carrinho (VERSÃO FINAL COM E-MAIL)
+// Função para validar o formulário de compra e habilitar/desabilitar o botão de finalizar.
 function validarFormularioCompleto() {
-    // Pega os valores e remove espaços em branco extras
-    const nome = inputNome.value.trim();
-    const cpf = InputCpf.value.trim();
-    const telefone = InputPhone.value.trim();
-    const email = InputEmail.value.trim(); // <<-- CAPTURA O VALOR DO E-MAIL
+    const nomeValido = inputNome.value.trim().length >= 3; // Nome deve ter pelo menos 3 caracteres.
+    const cpfValido = validarCPF(InputCpf.value); // Valida o CPF usando a função 'validarCPF'.
+    const telefoneValido = InputPhone.value.replace(/\D/g, "").length >= 10; // Telefone com pelo menos 10 dígitos.
+    const emailValido = InputEmail.value.trim() === "" || validarEmail(InputEmail.value); // Email opcional, mas se preenchido, deve ser válido.
+    const carrinhoValido = carrinhoTemItens(); // Verifica se o carrinho não está vazio.
 
-    // Validações individuais para cada campo
-    const nomeValido = nome.length >= 3;
-    const cpfValido = validarCPF(cpf);
-    const telefoneValido = telefone.length >= 14;
-    const emailValido = validarEmail(email); // <<-- USA A NOVA FUNÇÃO DE VALIDAÇÃO DE E-MAIL
-    const carrinhoValido = carrinhoTemItens();
-
-    // --- Feedback visual para o CPF ---
-    if (cpf.length > 0) {
-        InputCpf.classList.toggle('border-green-500', cpfValido);
-        InputCpf.classList.toggle('focus:ring-green-500', cpfValido);
-        InputCpf.classList.toggle('border-red-500', !cpfValido);
-        InputCpf.classList.toggle('focus:ring-red-500', !cpfValido);
+    // Adiciona/remove classes de validação visual para o campo de nome.
+    if (inputNome.value.trim() !== "") {
+        inputNome.classList.toggle("border-green-500", nomeValido);
+        inputNome.classList.toggle("focus:ring-green-500", nomeValido);
+        inputNome.classList.toggle("border-red-500", !nomeValido);
+        inputNome.classList.toggle("focus:ring-red-500", !nomeValido);
     } else {
-        InputCpf.classList.remove('border-green-500', 'focus:ring-green-500', 'border-red-500', 'focus:ring-red-500');
+        inputNome.classList.remove("border-green-500", "focus:ring-green-500", "border-red-500", "focus:ring-red-500");
     }
 
-    // --- Feedback visual para o E-mail ---
-    if (email.length > 0) {
-        InputEmail.classList.toggle('border-green-500', emailValido);
-        InputEmail.classList.toggle('focus:ring-green-500', emailValido);
-        InputEmail.classList.toggle('border-red-500', !emailValido);
-        InputEmail.classList.toggle('focus:ring-red-500', !emailValido);
+    // Adiciona/remove classes de validação visual para o campo de CPF.
+    if (InputCpf.value.trim() !== "") {
+        InputCpf.classList.toggle("border-green-500", cpfValido);
+        InputCpf.classList.toggle("focus:ring-green-500", cpfValido);
+        InputCpf.classList.toggle("border-red-500", !cpfValido);
+        InputCpf.classList.toggle("focus:ring-red-500", !cpfValido);
     } else {
-        InputEmail.classList.remove('border-green-500', 'focus:ring-green-500', 'border-red-500', 'focus:ring-red-500');
+        InputCpf.classList.remove("border-green-500", "focus:ring-green-500", "border-red-500", "focus:ring-red-500");
     }
 
-    // Verifica se TODAS as condições são verdadeiras
+    // Adiciona/remove classes de validação visual para o campo de telefone.
+    if (InputPhone.value.trim() !== "") {
+        InputPhone.classList.toggle("border-green-500", telefoneValido);
+        InputPhone.classList.toggle("focus:ring-green-500", telefoneValido);
+        InputPhone.classList.toggle("border-red-500", !telefoneValido);
+        InputPhone.classList.toggle("focus:ring-red-500", !telefoneValido);
+    } else {
+        InputPhone.classList.remove("border-green-500", "focus:ring-green-500", "border-red-500", "focus:ring-red-500");
+    }
+
+    // Adiciona/remove classes de validação visual para o campo de e-mail.
+    if (InputEmail.value.trim() !== "") {
+        InputEmail.classList.toggle("border-green-500", emailValido);
+        InputEmail.classList.toggle("focus:ring-green-500", emailValido);
+        InputEmail.classList.toggle("border-red-500", !emailValido);
+        InputEmail.classList.toggle("focus:ring-red-500", !emailValido);
+    } else {
+        InputEmail.classList.remove("border-green-500", "focus:ring-green-500", "border-red-500", "focus:ring-red-500");
+    }
+
+    // Verifica se todas as condições de validação são verdadeiras.
     const formularioCompleto = nomeValido && cpfValido && telefoneValido && emailValido && carrinhoValido;
 
-    // Habilita ou desabilita o botão de finalizar compra
+    // Habilita ou desabilita o botão de finalizar compra com base na validação.
     EndCompra.disabled = !formularioCompleto;
 
-    // Atualiza a mensagem de dica (tooltip) do botão para guiar o usuário
+    // Atualiza a mensagem de dica (tooltip) do botão para guiar o usuário.
     if (!carrinhoValido) {
         EndCompra.title = "Seu carrinho está vazio. Adicione números para continuar.";
     } else if (!nomeValido) {
@@ -520,7 +519,7 @@ function validarFormularioCompleto() {
     } else if (!telefoneValido) {
         EndCompra.title = "Por favor, preencha um telefone válido.";
     } else if (!emailValido) {
-        EndCompra.title = "Por favor, insira um e-mail válido."; // <<-- NOVA MENSAGEM DE DICA
+        EndCompra.title = "Por favor, insira um e-mail válido.";
     } else {
         EndCompra.title = "Tudo pronto para finalizar a compra!";
     }
@@ -528,25 +527,29 @@ function validarFormularioCompleto() {
     return formularioCompleto;
 }
 
-
-// Evento para adicionar os itens ao carrinho
+// Event listener para adicionar os números selecionados ao carrinho.
 botao.addEventListener("click", () => {
     const MsgCarrinhoVazio = document.getElementById("empty-cart-row");
     
+    // Converte os números selecionados para um array e os adiciona ao Set de números no carrinho.
     const NumbersArray = Array.from(numerosSelecionados).sort((a, b) => a - b);
-    NumbersArray.forEach(num => numerosNoCarrinho.add(parseInt(num)))
+    NumbersArray.forEach(num => numerosNoCarrinho.add(parseInt(num)));
 
+    // Esconde a mensagem de carrinho vazio se houver números.
     if (NumbersArray.length > 0) {
         MsgCarrinhoVazio.classList.add("hidden");
     }
 
+    // Cria uma nova linha para o item no carrinho.
     const LinhaLista = document.createElement("tr");
     LinhaLista.classList.add("border-b", "border-gray-300");
 
+    // Coluna para os números.
     const tdNumero = document.createElement("td");
     tdNumero.classList.add("text-center", "font-bold", "text-blue-500", "py-3", "px-5", "border");
     tdNumero.textContent = NumbersArray.join(", ");
 
+    // Coluna para o preço total dos números.
     const tdPreco = document.createElement("td");
     tdPreco.classList.add("text-center", "font-semibold", "py-3", "px-5", "border");
     tdPreco.textContent = (NumbersArray.length * PRECO_POR_NUMERO).toLocaleString("pt-BR", {
@@ -554,6 +557,7 @@ botao.addEventListener("click", () => {
         currency: "BRL"
     });
 
+    // Coluna para o botão de exclusão.
     const ExcluirNumero = document.createElement("td");
     ExcluirNumero.classList.add("text-center", "py-3", "px-5", "border");
     const icon = document.createElement("i");
@@ -562,83 +566,87 @@ botao.addEventListener("click", () => {
     icon.title = "Remover do carrinho";
     ExcluirNumero.appendChild(icon);
 
+    // Adiciona as colunas à linha e a linha à lista de itens do carrinho.
     LinhaLista.appendChild(tdNumero);
     LinhaLista.appendChild(tdPreco);
     LinhaLista.appendChild(ExcluirNumero);
     ListaDeItens.appendChild(LinhaLista);
 
+    // Event listener para remover o item do carrinho.
     icon.addEventListener("click", () => {
-
         const numerosParaRemover = LinhaLista.querySelector("td:first-child").textContent.split(",").map(n => parseInt(n.trim()));
         
-        // Remove esses números do Set de controle do carrinho
+        // Remove os números do Set de controle do carrinho.
         numerosParaRemover.forEach(num => numerosNoCarrinho.delete(num));
 
-        LinhaLista.remove();
-        LinhaLista.remove();
+        LinhaLista.remove(); // Remove a linha da tabela.
         
+        // Mostra a mensagem de carrinho vazio se não houver mais itens.
         const itensRestantes = ListaDeItens.querySelectorAll("tr:not(#empty-cart-row)");
         if (itensRestantes.length === 0) {
             MsgCarrinhoVazio.classList.remove("hidden");
         }
         
-        calcularTotalCarrinho();
-        validarFormularioCompleto();
-
-        atualizarStatusNoCarrinho();
+        calcularTotalCarrinho(); // Recalcula o total do carrinho.
+        validarFormularioCompleto(); // Revalida o formulário.
+        atualizarStatusNoCarrinho(); // Atualiza o status dos números no grid.
     });
 
-    numerosSelecionados.clear();
+    numerosSelecionados.clear(); // Limpa a seleção atual de números.
     
+    // Remove a classe 'selected' de todos os números no grid.
     document.querySelectorAll(".number-item.selected").forEach(elemento => {
         elemento.classList.remove("selected");
-
         atualizarStatusNoCarrinho();
     });
     
-    atualizarEstadoBotoes();
-    VerificaNumero();
-    
-    calcularTotalCarrinho();
-    validarFormularioCompleto();
+    atualizarEstadoBotoes(); // Atualiza o estado dos botões.
+    VerificaNumero(); // Atualiza o preço total.
+    calcularTotalCarrinho(); // Recalcula o total do carrinho.
+    validarFormularioCompleto(); // Revalida o formulário.
 });
 
-// Limpa seleção manual
+// Event listener para limpar a seleção manual de números.
 LimparSelecao.addEventListener("click", () => {
-    numerosSelecionados.clear();
+    numerosSelecionados.clear(); // Limpa o Set de números selecionados.
     
+    // Remove a classe 'selected' de todos os números no grid.
     document.querySelectorAll(".number-item.selected").forEach(num => {
         num.classList.remove("selected");
     });
     
-    atualizarEstadoBotoes();
-    VerificaNumero();
+    atualizarEstadoBotoes(); // Atualiza o estado dos botões.
+    VerificaNumero(); // Atualiza o preço total.
 });
 
-// Modal
+// Referências aos elementos do modal de compra.
 const modal = document.getElementById("modal");
 const openModalBtn = document.getElementById("openModalButton");
 const closeModalBtn = document.getElementById("closeModalButton");
 
+// Event listener para abrir o modal de compra.
 openModalBtn?.addEventListener("click", () => {
     modal.classList.remove("hidden");
-    calcularTotalCarrinho();
-    validarFormularioCompleto();
+    calcularTotalCarrinho(); // Recalcula o total do carrinho ao abrir o modal.
+    validarFormularioCompleto(); // Valida o formulário ao abrir o modal.
 });
 
+// Event listener para fechar o modal de compra.
 closeModalBtn?.addEventListener("click", () => {
     modal.classList.add("hidden");
 });
 
+// Fecha o modal ao clicar fora dele.
 modal?.addEventListener("click", (e) => {
     if (e.target === modal) modal.classList.add("hidden");
 });
 
+// Fecha o modal ao pressionar a tecla 'Escape'.
 document.addEventListener("keydown", (e) => {
     if (e.key === "Escape") modal.classList.add("hidden");
 });
 
-// Máscaras
+// Função para aplicar máscara de CPF.
 function mascaraCPF(campo) {
     let cpf = campo.value.replace(/\D/g, "");
     cpf = cpf.replace(/(\d{3})(\d)/, "$1.$2");
@@ -646,9 +654,10 @@ function mascaraCPF(campo) {
     cpf = cpf.replace(/(\d{3})(\d{1,2})$/, "$1-$2");
     campo.value = cpf;
     
-    validarFormularioCompleto();
+    validarFormularioCompleto(); // Revalida o formulário após a máscara.
 }
 
+// Função para aplicar máscara de telefone.
 function mascaraTelefone(campo) {
     let tel = campo.value.replace(/\D/g, "");
     if (tel.length > 11) tel = tel.slice(0, 11);
@@ -663,22 +672,22 @@ function mascaraTelefone(campo) {
     }
     campo.value = formatado;
     
-    validarFormularioCompleto();
+    validarFormularioCompleto(); // Revalida o formulário após a máscara.
 }
 
-// Event listeners para validação em tempo real
+// Event listeners para validação em tempo real dos campos do formulário.
 inputNome.addEventListener("input", validarFormularioCompleto);
 InputCpf.addEventListener("input", validarFormularioCompleto);
 InputPhone.addEventListener("input", validarFormularioCompleto);
 InputEmail.addEventListener("input", validarFormularioCompleto);
 
-// NOVO: Event listener para o botão de finalizar compra com envio para o servidor
-EndCompra.addEventListener("click", async () => { // Adicionamos 'async' para usar 'await'
+// Event listener para o botão de finalizar compra, enviando os dados para o servidor.
+EndCompra.addEventListener("click", async () => {
     if (!validarFormularioCompleto()) {
-        return; // Se o formulário não for válido, interrompe a execução
+        return; // Interrompe se o formulário não for válido.
     }
 
-    // Desabilita o botão para evitar múltiplos cliques
+    // Desabilita o botão para evitar múltiplos cliques e mostra status.
     EndCompra.disabled = true;
     EndCompra.textContent = "Processando...";
 
@@ -686,13 +695,14 @@ EndCompra.addEventListener("click", async () => { // Adicionamos 'async' para us
     const itensCarrinho = ListaDeItens.querySelectorAll("tr:not(#empty-cart-row)");
     let todosOsNumeros = [];
 
+    // Coleta todos os números do carrinho.
     itensCarrinho.forEach(item => {
         const numerosText = item.querySelector("td:first-child").textContent;
         const numeros = numerosText.split(",").map(n => n.trim()).filter(n => n !== "");
         todosOsNumeros = todosOsNumeros.concat(numeros);
     });
 
-    // Objeto com os dados a serem enviados
+    // Objeto com os dados da compra a serem enviados.
     const dadosCompra = {
         nome: inputNome.value,
         cpf: InputCpf.value,
@@ -703,73 +713,68 @@ EndCompra.addEventListener("click", async () => { // Adicionamos 'async' para us
     };
 
     try {
-        // Usando a API Fetch para enviar os dados para o teste.php
-        const response = await fetch('/TCC/backend/controller/cadastro.php', {
-            method: 'POST',
+        // Envia os dados para o backend via Fetch API.
+        const response = await fetch("/TCC/backend/controller/cadastro.php", {
+            method: "POST",
             headers: {
-                'Content-Type': 'application/json',
+                "Content-Type": "application/json",
             },
             body: JSON.stringify(dadosCompra),
         });
 
-        const result = await response.json(); // Supondo que o cadastro.php retorne JSON
+        const result = await response.json(); // Processa a resposta JSON.
 
-        if (result.success) { // Verifica se o cadastro foi bem-sucedido
+        if (result.success) {
             alert("Compra realizada com sucesso!");
-            limparCarrinho(); // Limpa o formulário e o carrinho
-
-            // >>> ADICIONE A CHAMADA AQUI <<<
-            // Atualiza a interface para desabilitar os números recém-comprados
-            await atualizarNumerosComprados(); 
-
+            limparCarrinho(); // Limpa o formulário e o carrinho após a compra.
+            await atualizarNumerosComprados(); // Atualiza a interface para desabilitar números comprados.
         } else {
             alert("Erro ao finalizar a compra: " + (result.message || "Tente novamente."));
         }
 
     } catch (error) {
-        // Em caso de erro na comunicação com o servidor
-        console.error('Erro ao enviar dados:', error);
+        console.error("Erro ao enviar dados:", error);
         alert("Ocorreu um erro de comunicação. Tente novamente mais tarde.");
     } finally {
-        // Reabilita o botão e restaura o texto original
+        // Reabilita o botão e restaura o texto original.
         EndCompra.disabled = false;
         EndCompra.textContent = "Finalizar Compra";
-        validarFormularioCompleto(); // Revalida o estado do botão
+        validarFormularioCompleto(); // Revalida o estado do botão.
     }
 });
 
-
-// Função para limpar o carrinho
+// Função para limpar o carrinho de compras e os campos do formulário.
 function limparCarrinho() {
     const MsgCarrinhoVazio = document.getElementById("empty-cart-row");
     const itensCarrinho = ListaDeItens.querySelectorAll("tr:not(#empty-cart-row)");
     
-    itensCarrinho.forEach(item => item.remove());
+    itensCarrinho.forEach(item => item.remove()); // Remove todos os itens do carrinho.
     
-    MsgCarrinhoVazio.classList.remove("hidden");
+    MsgCarrinhoVazio.classList.remove("hidden"); // Mostra a mensagem de carrinho vazio.
     
+    // Limpa os campos do formulário.
     inputNome.value = "";
     InputCpf.value = "";
     InputPhone.value = "";
     InputEmail.value = "";
     
-    numerosNoCarrinho.clear();
-    calcularTotalCarrinho();
-    validarFormularioCompleto();
+    numerosNoCarrinho.clear(); // Limpa o Set de números no carrinho.
+    calcularTotalCarrinho(); // Recalcula o total do carrinho.
+    validarFormularioCompleto(); // Revalida o formulário.
     
-    modal.classList.add("hidden");
+    modal.classList.add("hidden"); // Fecha o modal de compra.
 }
 
-// NOVA FUNCIONALIDADE: Função otimizada para verificar atualizações de configuração
+// Função para verificar atualizações na configuração da rifa e aplicar otimizações.
 function verificarAtualizacoes() {
     const configAtual = loadRaffleConfig();
     
-    // Se não há cache ainda, não faz nada (será aplicado na inicialização)
+    // Não faz nada se o cache ainda não foi inicializado.
     if (!configAtualCache) {
         return;
     }
     
-    // Verifica se houve mudanças comparando com o cache
+    // Compara a configuração atual com o cache para detectar mudanças.
     const houveMudanca = (
         configAtual.title !== configAtualCache.title ||
         configAtual.description !== configAtualCache.description ||
@@ -782,90 +787,87 @@ function verificarAtualizacoes() {
     
     if (houveMudanca) {
         console.log("Configurações atualizadas detectadas, aplicando otimizado...");
-        applyRaffleConfigOptimized(); // Aplica apenas as mudanças necessárias
+        applyRaffleConfigOptimized(); // Aplica apenas as mudanças necessárias.
     }
 }
 
+// Inicia a atualização automática dos números comprados em segundo plano.
 function iniciarAtualizacaoAutomaticaDeNumeros() {
-    // Chama a função a cada 15 segundos (15000 milissegundos)
+    // Chama a função a cada 15 segundos para verificar números comprados.
     setInterval(async () => {
         console.log("Verificando números comprados em segundo plano...");
         
-        // Salva a seleção atual do usuário para não perdê-la durante a atualização
-        salvarSelecaoAtual();
-        
-        // Busca os números mais recentes do servidor e atualiza a interface
-        await atualizarNumerosComprados();
-        
-        // Marca os números que o usuário já tem no carrinho
-        atualizarStatusNoCarrinho();
+        salvarSelecaoAtual(); // Salva a seleção do usuário para não perdê-la.
+        await atualizarNumerosComprados(); // Busca e atualiza os números vendidos.
+        atualizarStatusNoCarrinho(); // Marca os números no carrinho.
+        restaurarSelecaoNaPagina(); // Restaura a seleção do usuário.
 
-        // Restaura a seleção do usuário nos números que ainda estão disponíveis
-        restaurarSelecaoNaPagina();
-
-    }, 15000); // Intervalo de 15 segundos
+    }, 15000); // Intervalo de 15 segundos.
 }
 
-// NOVA FUNCIONALIDADE: Verifica atualizações a cada 5 segundos
+// Verifica atualizações da configuração a cada 5 segundos.
 setInterval(verificarAtualizacoes, 5000);
 
-// Inicialização da página
+// Função de inicialização da página.
 function inicializar() {
-    // Aplica configurações do Local Storage (primeira vez - completo)
-    applyRaffleConfigOptimized(true);
-    
-    // Gera os dots de navegação
-    gerarDots();
-    
-    // Renderiza a primeira página
-    renderizarPagina(paginaAtual);
-    
-    // Atualiza as setas
-    atualizarSetas();
-    
-    // Adiciona transição suave ao grid de números
-    PainelNumero.style.transition = "opacity 0.3s ease, transform 0.3s ease";
-    
-    // Inicializa o total do carrinho
-    calcularTotalCarrinho();
-    
-    // Valida o formulário inicialmente
-    validarFormularioCompleto();
-
-     atualizarNumerosComprados();
-
-     iniciarAtualizacaoAutomaticaDeNumeros(); 
+    applyRaffleConfigOptimized(true); // Aplica configurações iniciais (completo).
+    gerarDots(); // Gera os dots de navegação.
+    renderizarPagina(paginaAtual); // Renderiza a primeira página.
+    atualizarSetas(); // Atualiza as setas de navegação.
+    PainelNumero.style.transition = "opacity 0.3s ease, transform 0.3s ease"; // Adiciona transição suave ao grid.
+    calcularTotalCarrinho(); // Inicializa o total do carrinho.
+    validarFormularioCompleto(); // Valida o formulário inicialmente.
+    atualizarNumerosComprados(); // Busca e atualiza os números comprados.
+    iniciarAtualizacaoAutomaticaDeNumeros(); // Inicia a atualização automática.
 }
 
-// Executa a inicialização quando o DOM estiver carregado
+// Executa a inicialização quando o DOM estiver completamente carregado.
 if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", inicializar);
 } else {
     inicializar();
 }
 
-const AbrirComprados = document.getElementById("openPurchasedNumbersModal");
-const NumerosComprados = document.getElementById("purchasedNumbersModal")
-const FecharComprados = document.getElementById("closePurchasedNumbersModal");
+// Referências aos elementos do modal de números comprados.
+const purchasedNumbersModal = document.getElementById("purchasedNumbersModal");
+const openPurchasedNumbersModalBtn = document.getElementById("openPurchasedNumbersModal");
+const closePurchasedNumbersModalBtn = document.getElementById("closePurchasedNumbersModal");
+const searchCPFInput = document.getElementById("searchCPF");
+const searchButton = document.getElementById("searchButton");
+const purchasedNumbersResults = document.getElementById("purchasedNumbersResults");
 
-AbrirComprados.addEventListener("click", () => {
-    NumerosComprados.classList.remove("hidden");
+// Event listeners para abrir e fechar o modal de números comprados.
+openPurchasedNumbersModalBtn.addEventListener("click", () => {
+    purchasedNumbersModal.classList.remove("hidden");
+    purchasedNumbersModal.classList.add("flex"); // Adiciona 'flex' para centralizar o modal.
+    resetPurchasedNumbersModal(); // Reseta o modal ao abrir.
 });
 
-FecharComprados.addEventListener("click", () => {
-    NumerosComprados.classList.add("hidden");
+closePurchasedNumbersModalBtn.addEventListener("click", () => {
+    purchasedNumbersModal.classList.add("hidden");
+    purchasedNumbersModal.classList.remove("flex"); // Remove 'flex' ao fechar.
 });
 
+// Fecha o modal ao clicar fora dele.
+purchasedNumbersModal.addEventListener("click", (e) => {
+    if (e.target === purchasedNumbersModal) {
+        purchasedNumbersModal.classList.add("hidden");
+        purchasedNumbersModal.classList.remove("flex");
+    }
+});
 
+// Fecha o modal ao pressionar a tecla 'Escape'.
+document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") {
+        if (!purchasedNumbersModal.classList.contains("hidden")) {
+            purchasedNumbersModal.classList.add("hidden");
+            purchasedNumbersModal.classList.remove("flex");
+        }
+    }
+});
 
-
-// Funcionalidade de busca de números comprados por CPF
-const searchCPFInput = document.getElementById('searchCPF');
-const searchButton = document.getElementById('searchButton');
-const purchasedNumbersResults = document.getElementById('purchasedNumbersResults');
-
-// Mude o event listener para o botão de busca
-searchButton.addEventListener('click', async () => {
+// Event listener para o botão de busca de CPF dentro do modal.
+searchButton.addEventListener("click", async () => {
     const cpf = searchCPFInput.value.trim();
 
     if (!cpf) {
@@ -873,14 +875,15 @@ searchButton.addEventListener('click', async () => {
         return;
     }
 
-    // Limpa resultados anteriores e mostra mensagem de carregamento
+    // Limpa resultados anteriores e mostra mensagem de carregamento.
     purchasedNumbersResults.innerHTML = '<div class="text-center text-gray-500 italic py-8"><i class="fas fa-spinner fa-spin mr-2"></i>Buscando números...</div>';
 
     try {
-        const response = await fetch('/TCC/backend/controller/busca.php', {
-            method: 'POST',
+        // Envia o CPF para o backend para buscar os números.
+        const response = await fetch("/TCC/backend/controller/busca.php", {
+            method: "POST",
             headers: {
-                'Content-Type': 'application/json'
+                "Content-Type": "application/json"
             },
             body: JSON.stringify({ cpf: cpf })
         });
@@ -889,6 +892,7 @@ searchButton.addEventListener('click', async () => {
 
         if (data.success) {
             if (data.numeros && data.numeros.length > 0) {
+                // Formata e exibe os números encontrados e dados do cliente.
                 const numerosFormatados = data.numeros.map(num => `<span class="inline-block bg-blue-100 text-blue-800 text-sm font-semibold px-3 py-1 rounded-full m-1">${num}</span>`).join('');
                 purchasedNumbersResults.innerHTML = `
                     <div class="bg-green-50 border border-green-200 p-4 rounded-md mb-4">
@@ -914,17 +918,14 @@ searchButton.addEventListener('click', async () => {
     }
 });
 
-// Função para redefinir o estado do modal de busca
+// Função para redefinir o estado do modal de busca de números comprados.
 function resetPurchasedNumbersModal() {
-    const searchCPFInput = document.getElementById('searchCPF');
-    const purchasedNumbersResults = document.getElementById('purchasedNumbersResults');
-
-    // 1. Limpa o campo de input do CPF
+    // 1. Limpa o campo de input do CPF.
     if (searchCPFInput) {
         searchCPFInput.value = '';
     }
 
-    // 2. Restaura a mensagem inicial na área de resultados
+    // 2. Restaura a mensagem inicial na área de resultados.
     if (purchasedNumbersResults) {
         purchasedNumbersResults.innerHTML = `
             <div class="text-center text-gray-500 italic py-8">
@@ -934,188 +935,70 @@ function resetPurchasedNumbersModal() {
     }
 }
 
-
-
-// Abre e fecha o modal de números comprados
-const purchasedNumbersModal = document.getElementById('purchasedNumbersModal');
-const openPurchasedNumbersModalBtn = document.getElementById('openPurchasedNumbersModal');
-const closePurchasedNumbersModalBtn = document.getElementById('closePurchasedNumbersModal');
-
-openPurchasedNumbersModalBtn.addEventListener('click', () => {
-    purchasedNumbersModal.classList.remove('hidden');
-    purchasedNumbersModal.classList.add('flex');
-});
-
-closePurchasedNumbersModalBtn.addEventListener('click', () => {
-    purchasedNumbersModal.classList.add('hidden');
-    purchasedNumbersModal.classList.remove('flex');
-    resetPurchasedNumbersModal();
-});
-
-// Fecha o modal ao clicar fora dele
-window.addEventListener('click', (event) => {
-    if (event.target === purchasedNumbersModal) {
-        purchasedNumbersModal.classList.add('hidden');
-        purchasedNumbersModal.classList.remove('flex');
-        resetPurchasedNumbersModal();
-    }
-});
-
-// Máscara de CPF para o input de busca
-function mascaraCPF(input) {
-    let value = input.value.replace(/\D/g, ''); // Remove tudo que não é dígito
-    if (value.length > 11) {
-        value = value.substring(0, 11);
-    }
-    value = value.replace(/(\d{3})(\d)/, '$1.$2');
-    value = value.replace(/(\d{3})(\d)/, '$1.$2');
-    value = value.replace(/(\d{3})(\d{1,2})$/, '$1-$2');
-    input.value = value;
-}
-
-// Aplica a máscara de CPF ao carregar a página, caso o input já tenha valor
-document.addEventListener('DOMContentLoaded', () => {
-    const searchCPFInput = document.getElementById('searchCPF');
-    if (searchCPFInput) {
-        mascaraCPF(searchCPFInput);
-    }
-});
-
-
-
-
-
-
-// NOVA FUNCIONALIDADE: Elementos para a busca por CPF
-const InputCpfBusca = document.getElementById("search-cpf-input");
-const BotaoBusca = document.getElementById("search-cpf-button");
-const ResultadoBusca = document.getElementById("search-results");
-
-// Função para buscar números por CPF
-async function buscarNumerosPorCpf() {
-    const cpf = InputCpfBusca.value.trim();
-
-    if (!cpf) {
-        alert("Por favor, digite um CPF para buscar.");
-        return;
-    }
-
-    // Normaliza o CPF (remove caracteres não numéricos)
-    const cpfLimpo = cpf.replace(/\D/g, "");
-
-    if (cpfLimpo.length !== 11) {
-        alert("CPF inválido. O CPF deve conter 11 dígitos.");
-        return;
-    }
-
-    ResultadoBusca.innerHTML = "Buscando...";
-
-    try {
-        const response = await fetch("busca.php", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ cpf: cpfLimpo }),
-        });
-
-        const data = await response.json();
-
-        if (data.success) {
-            if (data.numeros && data.numeros.length > 0) {
-                ResultadoBusca.innerHTML = `Números encontrados para o CPF ${data.cpf}: <strong>${data.numeros.join(", ")}</strong>`;
-            } else {
-                ResultadoBusca.innerHTML = `Nenhum número encontrado para o CPF ${data.cpf}.`;
-            }
-        } else {
-            ResultadoBusca.innerHTML = `Erro na busca: ${data.message || "Ocorreu um erro desconhecido."}`; 
-        }
-    } catch (error) {
-        console.error("Erro ao buscar números:", error);
-        ResultadoBusca.innerHTML = "Erro ao conectar com o servidor de busca.";
-    }
-}
-
-// Event Listener para o botão de busca
-if (BotaoBusca) {
-    BotaoBusca.addEventListener("click", buscarNumerosPorCpf);
-}
-
-// Event Listener para permitir busca ao pressionar Enter no campo CPF
-if (InputCpfBusca) {
-    InputCpfBusca.addEventListener("keypress", (e) => {
-        if (e.key === "Enter") {
-            buscarNumerosPorCpf();
-        }
-    });
-}
-
-// NOVA FUNÇÃO: Busca números já comprados e os desabilita na interface
+// Função para buscar números já comprados e desabilitá-los na interface.
 async function atualizarNumerosComprados() {
     try {
-        // Faz a requisição para o novo script PHP
-        const response = await fetch('/TCC/backend/controller/BuscarComprados.php');
+        // Faz a requisição para o script PHP que busca números comprados.
+        const response = await fetch("/TCC/backend/controller/BuscarComprados.php");
         const data = await response.json();
 
         if (data.success && data.numeros) {
-            // Converte a lista de números para um Set para busca rápida
+            // Converte a lista de números vendidos para um Set para busca rápida.
             const numerosVendidos = new Set(data.numeros.map(n => parseInt(n)));
 
-            // Seleciona todos os itens de número visíveis na tela
+            // Seleciona todos os itens de número visíveis na tela.
             const todosOsNumerosVisiveis = document.querySelectorAll(".number-item");
 
             todosOsNumerosVisiveis.forEach(elemento => {
                 const numero = parseInt(elemento.textContent);
 
-                // Verifica se o número está na lista de vendidos
+                // Adiciona a classe 'sold' se o número estiver vendido, e remove 'selected'.
                 if (numerosVendidos.has(numero)) {
-                    elemento.classList.add("sold"); // Aplica a classe para desabilitar
-                    elemento.classList.remove("selected"); // Garante que não fique selecionado
-                    elemento.title = "Este número já foi comprado"; // Adiciona uma dica
+                    elemento.classList.add("sold");
+                    elemento.classList.remove("selected");
+                    elemento.title = "Este número já foi comprado";
                 } else {
-                    // Garante que números que não estão vendidos não tenham a classe
+                    // Garante que números não vendidos não tenham a classe 'sold'.
                     elemento.classList.remove("sold");
-                    elemento.title = ""; // Limpa a dica
+                    elemento.title = "";
                 }
             });
         }
     } catch (error) {
-        console.error('Erro ao buscar ou atualizar números comprados:', error);
+        console.error("Erro ao buscar ou atualizar números comprados:", error);
     }
 }
 
-// >>> ADICIONE ESTA NOVA FUNÇÃO <<<
-// Função para marcar os números que já estão no carrinho como desabilitados
+// Função para marcar os números que já estão no carrinho como desabilitados na interface.
 function atualizarStatusNoCarrinho() {
     const todosOsNumerosVisiveis = document.querySelectorAll(".number-item");
 
     todosOsNumerosVisiveis.forEach(elemento => {
         const numero = parseInt(elemento.textContent);
 
+        // Adiciona a classe 'in-cart' se o número estiver no carrinho.
         if (numerosNoCarrinho.has(numero)) {
             elemento.classList.add("in-cart");
             elemento.title = "Este número já está no seu carrinho";
         } else {
-            // Garante que a classe seja removida se o item for removido do carrinho
+            // Garante que a classe 'in-cart' seja removida se o item for removido do carrinho.
             elemento.classList.remove("in-cart");
         }
     });
 }
 
+// Função para validar o formato de um CPF.
 function validarCPF(cpf) {
-    // Remove todos os caracteres que não são dígitos
-    const cpfLimpo = cpf.replace(/\D/g, '');
+    const cpfLimpo = cpf.replace(/\D/g, ''); // Remove caracteres não numéricos.
 
-    // 1. Verifica se o CPF tem 11 dígitos ou se é uma sequência de números iguais
+    // Verifica se o CPF tem 11 dígitos e não é uma sequência de números iguais.
     if (cpfLimpo.length !== 11 || /^(\d)\1{10}$/.test(cpfLimpo)) {
         return false;
     }
 
-    // Converte a string em um array de números para facilitar os cálculos
     const digitos = cpfLimpo.split('').map(Number);
 
-    // --- Cálculo do 1º Dígito Verificador ---
-    // Multiplica os 9 primeiros dígitos pela sequência regressiva de 10 a 2
+    // Cálculo do 1º Dígito Verificador.
     let soma = 0;
     for (let i = 0; i < 9; i++) {
         soma += digitos[i] * (10 - i);
@@ -1124,13 +1007,11 @@ function validarCPF(cpf) {
     let resto = soma % 11;
     let digitoVerificador1 = (resto < 2) ? 0 : 11 - resto;
 
-    // Compara o dígito calculado com o 10º dígito do CPF
     if (digitos[9] !== digitoVerificador1) {
         return false;
     }
 
-    // --- Cálculo do 2º Dígito Verificador ---
-    // Multiplica os 10 primeiros dígitos (incluindo o 1º dígito verificador) pela sequência de 11 a 2
+    // Cálculo do 2º Dígito Verificador.
     soma = 0;
     for (let i = 0; i < 10; i++) {
         soma += digitos[i] * (11 - i);
@@ -1139,25 +1020,18 @@ function validarCPF(cpf) {
     resto = soma % 11;
     let digitoVerificador2 = (resto < 2) ? 0 : 11 - resto;
 
-    // Compara o dígito calculado com o 11º dígito do CPF
     if (digitos[10] !== digitoVerificador2) {
         return false;
     }
 
-    // Se passou por todas as verificações, o CPF é válido
-    return true;
+    return true; // CPF válido.
 }
 
-// >>> ADICIONE ESTA NOVA FUNÇÃO <<<
-// Função para validar o formato de um endereço de e-mail
+// Função para validar o formato de um endereço de e-mail.
 function validarEmail(email) {
     // Expressão regular para validar o formato de e-mail.
-    // Garante que há caracteres antes e depois do @, e um domínio com ponto.
     const re = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
     return re.test(String(email).toLowerCase());
 }
-
-
-
 
 
