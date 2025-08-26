@@ -40,6 +40,9 @@ let numerosNoCarrinho = new Set();
 // Cache da configuração atual da rifa para otimizar as atualizações.
 let configAtualCache = null;
 
+// NOVA VARIÁVEL: Controla se o botão "adicionar ao carrinho" já foi usado
+let botaoAdicionarJaUsado = false;
+
 // Função otimizada para aplicar as configurações da rifa, atualizando apenas os elementos que mudaram.
 // Se 'forceUpdate' for verdadeiro ou for a primeira vez, aplica todas as configurações.
 function applyRaffleConfigOptimized(forceUpdate = false) {
@@ -234,11 +237,25 @@ function restaurarSelecaoNaPagina() {
     VerificaNumero();
 }
 
-// Função para atualizar o estado (habilitado/desabilitado) dos botões de ação.
+// FUNÇÃO MODIFICADA: Atualiza o estado dos botões considerando se já foi usado
 function atualizarEstadoBotoes() {
     const algumSelecionado = numerosSelecionados.size > 0;
-    botao.disabled = !algumSelecionado;
+    
+    // O botão só fica habilitado se há números selecionados E ainda não foi usado
+    botao.disabled = !algumSelecionado || botaoAdicionarJaUsado;
     LimparSelecao.disabled = !algumSelecionado;
+    
+    // Atualiza o texto do botão para indicar o estado
+    if (botaoAdicionarJaUsado && algumSelecionado) {
+        botao.innerHTML = '<i class="fas fa-lock"></i> Finalize a compra para adicionar mais';
+        botao.title = "Você já adicionou números ao carrinho. Finalize a compra para poder adicionar mais números.";
+    } else if (botaoAdicionarJaUsado) {
+        botao.innerHTML = '<i class="fas fa-lock"></i> Adicionar ao Carrinho';
+        botao.title = "Você já adicionou números ao carrinho. Finalize a compra para poder adicionar mais números.";
+    } else {
+        botao.innerHTML = '<i class="fas fa-cart-plus"></i> Adicionar ao Carrinho';
+        botao.title = "";
+    }
 }
 
 // Função para gerar os indicadores de página (dots) na navegação.
@@ -442,29 +459,32 @@ function calcularTotalCarrinho() {
     });
     
     totalCarrinho.textContent = total.toLocaleString("pt-BR", {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2
+        style: "currency",
+        currency: "BRL"
     });
     
     return total;
 }
 
-// Função para verificar se há itens no carrinho.
-function carrinhoTemItens() {
-    const itensCarrinho = ListaDeItens.querySelectorAll("tr:not(#empty-cart-row)");
-    return itensCarrinho.length > 0;
-}
-
-// Função para validar o formulário de compra e habilitar/desabilitar o botão de finalizar.
+// Função para validar se o formulário está completo e o carrinho não está vazio.
 function validarFormularioCompleto() {
-    const nomeValido = inputNome.value.trim().length >= 3; // Nome deve ter pelo menos 3 caracteres.
-    const cpfValido = validarCPF(InputCpf.value); // Valida o CPF usando a função 'validarCPF'.
-    const telefoneValido = InputPhone.value.replace(/\D/g, "").length >= 10; // Telefone com pelo menos 10 dígitos.
-    const emailValido = InputEmail.value.trim() === "" || validarEmail(InputEmail.value); // Email opcional, mas se preenchido, deve ser válido.
-    const carrinhoValido = carrinhoTemItens(); // Verifica se o carrinho não está vazio.
-
-    // Adiciona/remove classes de validação visual para o campo de nome.
-    if (inputNome.value.trim() !== "") {
+    const nome = inputNome.value.trim();
+    const cpf = InputCpf.value.trim();
+    const telefone = InputPhone.value.trim();
+    const email = InputEmail.value.trim();
+    
+    // Verifica se há itens no carrinho.
+    const itensCarrinho = ListaDeItens.querySelectorAll("tr:not(#empty-cart-row)");
+    const carrinhoValido = itensCarrinho.length > 0;
+    
+    // Validações específicas para cada campo.
+    const nomeValido = nome.length >= 3;
+    const cpfValido = validarCPF(cpf);
+    const telefoneValido = telefone.replace(/\D/g, "").length >= 10;
+    const emailValido = email === "" || validarEmail(email); // E-mail é opcional.
+    
+    // Atualiza as classes CSS dos campos para indicar validação.
+    if (nome.length > 0) {
         inputNome.classList.toggle("border-green-500", nomeValido);
         inputNome.classList.toggle("focus:ring-green-500", nomeValido);
         inputNome.classList.toggle("border-red-500", !nomeValido);
@@ -472,9 +492,8 @@ function validarFormularioCompleto() {
     } else {
         inputNome.classList.remove("border-green-500", "focus:ring-green-500", "border-red-500", "focus:ring-red-500");
     }
-
-    // Adiciona/remove classes de validação visual para o campo de CPF.
-    if (InputCpf.value.trim() !== "") {
+    
+    if (cpf.length > 0) {
         InputCpf.classList.toggle("border-green-500", cpfValido);
         InputCpf.classList.toggle("focus:ring-green-500", cpfValido);
         InputCpf.classList.toggle("border-red-500", !cpfValido);
@@ -482,9 +501,8 @@ function validarFormularioCompleto() {
     } else {
         InputCpf.classList.remove("border-green-500", "focus:ring-green-500", "border-red-500", "focus:ring-red-500");
     }
-
-    // Adiciona/remove classes de validação visual para o campo de telefone.
-    if (InputPhone.value.trim() !== "") {
+    
+    if (telefone.length > 0) {
         InputPhone.classList.toggle("border-green-500", telefoneValido);
         InputPhone.classList.toggle("focus:ring-green-500", telefoneValido);
         InputPhone.classList.toggle("border-red-500", !telefoneValido);
@@ -492,9 +510,8 @@ function validarFormularioCompleto() {
     } else {
         InputPhone.classList.remove("border-green-500", "focus:ring-green-500", "border-red-500", "focus:ring-red-500");
     }
-
-    // Adiciona/remove classes de validação visual para o campo de e-mail.
-    if (InputEmail.value.trim() !== "") {
+    
+    if (email.length > 0) {
         InputEmail.classList.toggle("border-green-500", emailValido);
         InputEmail.classList.toggle("focus:ring-green-500", emailValido);
         InputEmail.classList.toggle("border-red-500", !emailValido);
@@ -527,7 +544,7 @@ function validarFormularioCompleto() {
     return formularioCompleto;
 }
 
-// Event listener para adicionar os números selecionados ao carrinho.
+// EVENT LISTENER MODIFICADO: Adicionar os números selecionados ao carrinho e desabilitar o botão
 botao.addEventListener("click", () => {
     const MsgCarrinhoVazio = document.getElementById("empty-cart-row");
     
@@ -585,6 +602,10 @@ botao.addEventListener("click", () => {
         const itensRestantes = ListaDeItens.querySelectorAll("tr:not(#empty-cart-row)");
         if (itensRestantes.length === 0) {
             MsgCarrinhoVazio.classList.remove("hidden");
+
+          
+        botaoAdicionarJaUsado = false;
+        atualizarEstadoBotoes();
         }
         
         calcularTotalCarrinho(); // Recalcula o total do carrinho.
@@ -599,6 +620,9 @@ botao.addEventListener("click", () => {
         elemento.classList.remove("selected");
         atualizarStatusNoCarrinho();
     });
+    
+    // NOVA LÓGICA: Marca que o botão já foi usado
+    botaoAdicionarJaUsado = true;
     
     atualizarEstadoBotoes(); // Atualiza o estado dos botões.
     VerificaNumero(); // Atualiza o preço total.
@@ -681,7 +705,7 @@ InputCpf.addEventListener("input", validarFormularioCompleto);
 InputPhone.addEventListener("input", validarFormularioCompleto);
 InputEmail.addEventListener("input", validarFormularioCompleto);
 
-// Event listener para o botão de finalizar compra, enviando os dados para o servidor.
+// EVENT LISTENER MODIFICADO: Finalizar compra e reabilitar o botão "adicionar ao carrinho"
 EndCompra.addEventListener("click", async () => {
     if (!validarFormularioCompleto()) {
         return; // Interrompe se o formulário não for válido.
@@ -727,6 +751,11 @@ EndCompra.addEventListener("click", async () => {
         if (result.success) {
             alert("Compra realizada com sucesso!");
             limparCarrinho(); // Limpa o formulário e o carrinho após a compra.
+            
+            // NOVA LÓGICA: Reabilita o botão "adicionar ao carrinho" após finalizar a compra
+            botaoAdicionarJaUsado = false;
+            atualizarEstadoBotoes();
+            
             await atualizarNumerosComprados(); // Atualiza a interface para desabilitar números comprados.
         } else {
             alert("Erro ao finalizar a compra: " + (result.message || "Tente novamente."));
@@ -743,7 +772,7 @@ EndCompra.addEventListener("click", async () => {
     }
 });
 
-// Função para limpar o carrinho de compras e os campos do formulário.
+// FUNÇÃO MODIFICADA: Limpar o carrinho e reabilitar o botão "adicionar ao carrinho"
 function limparCarrinho() {
     const MsgCarrinhoVazio = document.getElementById("empty-cart-row");
     const itensCarrinho = ListaDeItens.querySelectorAll("tr:not(#empty-cart-row)");
@@ -761,6 +790,10 @@ function limparCarrinho() {
     numerosNoCarrinho.clear(); // Limpa o Set de números no carrinho.
     calcularTotalCarrinho(); // Recalcula o total do carrinho.
     validarFormularioCompleto(); // Revalida o formulário.
+    
+    // NOVA LÓGICA: Reabilita o botão "adicionar ao carrinho" ao limpar o carrinho
+    botaoAdicionarJaUsado = false;
+    atualizarEstadoBotoes();
     
     modal.classList.add("hidden"); // Fecha o modal de compra.
 }
@@ -1033,5 +1066,4 @@ function validarEmail(email) {
     const re = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
     return re.test(String(email).toLowerCase());
 }
-
 
