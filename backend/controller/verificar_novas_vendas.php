@@ -1,5 +1,6 @@
 <?php
 // verificar_novas_vendas.php (Versão Única e Final)
+//esse arquivo é parar a área do admin onde ele vai buscar no banco as compras feitas e depois adicionar na tabela
 
 include 'conexão.php';
 header('Content-Type: application/json');

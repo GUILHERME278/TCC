@@ -520,37 +520,3 @@ tabs.forEach(tab => {
     });
 });
 
-// Esta função parece não estar sendo chamada, mas pode ser para uso futuro.
-async function loadRaffleNumbers() {
-    try {
-        const response = await fetch('/TCC/backend/controller/get_raffle_numbers.php');
-        const data = await response.json();
-
-        if (data.success) {
-            const raffleNumbers = data.numbers;
-            // Aqui você precisaria de uma função para renderizar esses números na sua interface de compra
-            // Por exemplo, se você tem uma div com id="raffle-numbers-container"
-            const numbersContainer = document.getElementById('raffle-numbers-container');
-            if (numbersContainer) {
-                numbersContainer.innerHTML = ''; // Limpa o container
-                raffleNumbers.forEach(item => {
-                    const numberDiv = document.createElement('div');
-                    numberDiv.textContent = item.number.toString().padStart(4, '0'); // Formata com zeros à esquerda
-                    numberDiv.classList.add('raffle-number', 'p-2', 'border', 'rounded', 'text-center');
-                    if (item.is_sold) {
-                        numberDiv.classList.add('bg-red-200', 'text-red-800', 'cursor-not-allowed');
-                    } else {
-                        numberDiv.classList.add('bg-green-200', 'text-green-800', 'cursor-pointer', 'hover:bg-green-300');
-                        // Adicione um event listener para seleção, se for o caso
-                    }
-                    numbersContainer.appendChild(numberDiv);
-                });
-            }
-            console.log('Números da rifa atualizados:', raffleNumbers);
-        } else {
-            console.error('Erro ao carregar números da rifa:', data.message);
-        }
-    } catch (error) {
-        console.error('Erro na requisição para carregar números da rifa:', error);
-    }
-}

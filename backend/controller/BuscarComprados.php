@@ -1,4 +1,9 @@
 <?php
+//Esse arquivo serve para buscar os números que já foram comprados no banco de dados
+//e depois desabilitar esse números comprados no front
+
+
+
 include 'conexão.php';
 
 // Array para armazenar a resposta que será enviada ao front-end

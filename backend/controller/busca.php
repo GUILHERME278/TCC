@@ -1,4 +1,8 @@
+
+
 <?php
+//Esse arquivo serve para buscar os númreos comprados pelo usuário no botao números comprados
+
 header("Content-Type: application/json");
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 

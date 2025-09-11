@@ -1,4 +1,6 @@
 <?php
+//eses arquivo serve parar cadastrar os números comprados e os dados do comprador no banco 
+
 header('Content-Type: application/json');
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 
