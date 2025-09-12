@@ -1,4 +1,8 @@
 <?php
+//usando openssl_encrypt() para criptografia dos dados
+// Definições de criptografia
+define('ENCRYPTION_KEY', 'sua-chave-secreta-aqui'); // Troque por uma chave segura
+define('ENCRYPTION_METHOD', 'aes-256-cbc');
 //eses arquivo serve parar cadastrar os números comprados e os dados do comprador no banco 
 
 header('Content-Type: application/json');
@@ -39,7 +43,11 @@ try {
         "INSERT INTO clientes (cpf, nome, telefone, email) VALUES (?, ?, ?, ?)
          ON DUPLICATE KEY UPDATE nome = VALUES(nome), telefone = VALUES(telefone), email = VALUES(email)"
     );
-    $stmt_cliente->bind_param("ssss", $cpf, $nome, $telefone, $email);
+    $cpf_encrypted = encrypt_data($cpf);
+    $telefone_encrypted = encrypt_data($telefone);
+    $email_encrypted = $email ? encrypt_data($email) : null;
+
+    $stmt_cliente->bind_param("ssss", $cpf_encrypted, $nome, $telefone_encrypted, $email_encrypted);
     $stmt_cliente->execute();
     $stmt_cliente->close();
 
@@ -48,7 +56,7 @@ try {
     foreach ($numeros_comprados as $numero) {
         $numero = trim($numero);
         if ($numero === '') continue;
-        $stmt_numero->bind_param("ss", $numero, $cpf);
+        $stmt_numero->bind_param("ss", $numero, $cpf_encrypted);
         $stmt_numero->execute();
     }
     $stmt_numero->close();
@@ -61,3 +69,13 @@ try {
 } finally {
     $conn->close();
 }
+
+
+// Função para criptografar dados
+function encrypt_data($data) {
+    $iv = openssl_random_pseudo_bytes(openssl_cipher_iv_length(ENCRYPTION_METHOD));
+    $encrypted = openssl_encrypt($data, ENCRYPTION_METHOD, ENCRYPTION_KEY, 0, $iv);
+    return base64_encode($encrypted . '::' . $iv);
+}
+
+
