@@ -1,4 +1,7 @@
 <?php
+
+
+
 // verificar_novas_vendas.php (Versão Única e Final)
 //esse arquivo é parar a área do admin onde ele vai buscar no banco as compras feitas e depois adicionar na tabela
 
@@ -50,11 +53,11 @@ if ($deve_buscar_dados) {
     $vendas = [];
     while ($row = mysqli_fetch_assoc($resultado_busca)) {
         $vendas[] = [
-            'id'           => $row['cpf'],
-            'cpf'          => $row['cpf'],
-            'name'         => $row['nome'],
-            'email'        => $row['email'] ? $row['email'] : 'Não informado',
-            'phone'        => $row['telefone'],
+            'id'           => decrypt_data($row['cpf']),
+            'cpf'          => decrypt_data($row['cpf']),
+            'name'         => $row['nome'], // Nome não é criptografado
+            'email'        => $row['email'] ? decrypt_data($row['email']) : 'Não informado',
+            'phone'        => decrypt_data($row['telefone']),
             'numbers'      => $row['numeros_comprados'] ? explode(',', $row['numeros_comprados']) : [],
             'total_numbers' => (int)$row['total_numeros'],
             'status'       => 'pendente', // Status padrão, pode ser alterado conforme regra de negócio
