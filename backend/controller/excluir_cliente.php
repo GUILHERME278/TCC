@@ -1,59 +1,61 @@
-
 <?php
+require_once "conexão.php"; // mesma pasta
 
-include 'conexão.php';
-// Verifica se o método da requisição é POST (mais seguro para exclusões)
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // Pega o corpo da requisição (que será enviado como JSON pelo frontend)
-    $data = json_decode(file_get_contents('php://input'), true);
-    
-    // Verifica se o CPF foi enviado
-    if (!isset($data['cpf']) || empty($data['cpf'])) {
-        echo json_encode(['success' => false, 'message' => 'CPF não fornecido.']);
-        exit();
+// Captura JSON enviado pelo fetch
+$input = json_decode(file_get_contents("php://input"), true);
+
+if (isset($input['cpf'])) {
+    $cpfCriptografado = $input['cpf'];
+
+    // Usa a função centralizada de descriptografia
+    if (function_exists("decrypt_data")) {
+        $cpf = open_ssl_decrypt($cpfCriptografado);
+    } else {
+        echo json_encode([
+            "success" => false,
+            "message" => "Função de criptografia não encontrada no conexão.php"
+        ]);
+        exit;
     }
 
-    $cpf_cliente = $data['cpf'];
+    if ($cpf) {
+        try {
+            // Exclui primeiro os números vinculados
+            $sqlNumeros = $pdo->prepare("DELETE FROM numeros WHERE cpf_cliente = :cpf");
+            $sqlNumeros->bindParam(":cpf", $cpf);
+            $sqlNumeros->execute();
 
-    // Inicia uma transação para garantir que ambas as exclusões (números e cliente) ocorram com sucesso
-    $conn->begin_transaction();
+            // Depois exclui o cliente
+            $sqlCliente = $pdo->prepare("DELETE FROM clientes WHERE cpf = :cpf");
+            $sqlCliente->bindParam(":cpf", $cpf);
+            $sqlCliente->execute();
 
-    try {
-        // 1. Exclui os números associados ao CPF do cliente na tabela 'numeros'
-        $stmt_numeros = $conn->prepare("DELETE FROM numeros WHERE cpf_cliente = ?");
-        $stmt_numeros->bind_param("s", $cpf_cliente);
-        $stmt_numeros->execute();
-        $stmt_numeros->close();
-
-        // 2. Exclui o cliente da tabela 'clientes'
-        $stmt_cliente = $conn->prepare("DELETE FROM clientes WHERE cpf = ?");
-        $stmt_cliente->bind_param("s", $cpf_cliente);
-        $stmt_cliente->execute();
-
-        // Verifica se o cliente foi realmente excluído (se alguma linha foi afetada)
-        if ($stmt_cliente->affected_rows > 0) {
-            // Se tudo deu certo, confirma a transação
-            $conn->commit();
-            echo json_encode(['success' => true, 'message' => 'Cliente e seus números foram excluídos com sucesso.']);
-        } else {
-            // Se nenhum cliente com esse CPF foi encontrado, reverte a transação
-            $conn->rollback();
-            echo json_encode(['success' => false, 'message' => 'Nenhum cliente encontrado com o CPF fornecido.']);
+            if ($sqlCliente->rowCount() > 0) {
+                echo json_encode([
+                    "success" => true,
+                    "message" => "Cliente excluído com sucesso!"
+                ]);
+            } else {
+                echo json_encode([
+                    "success" => false,
+                    "message" => "Nenhum cliente encontrado para exclusão."
+                ]);
+            }
+        } catch (PDOException $e) {
+            echo json_encode([
+                "success" => false,
+                "message" => "Erro no banco: " . $e->getMessage()
+            ]);
         }
-
-        $stmt_cliente->close();
-
-    } catch (mysqli_sql_exception $exception) {
-        // Em caso de erro em qualquer uma das operações, reverte a transação
-        $conn->rollback();
-        echo json_encode(['success' => false, 'message' => 'Erro ao excluir o cliente: ' . $exception->getMessage()]);
+    } else {
+        echo json_encode([
+            "success" => false,
+            "message" => "Erro ao descriptografar o CPF."
+        ]);
     }
-
 } else {
-    // Se o método não for POST, retorna um erro
-    echo json_encode(['success' => false, 'message' => 'Método de requisição inválido. Use POST.']);
+    echo json_encode([
+        "success" => false,
+        "message" => "CPF não informado."
+    ]);
 }
-
-// Fecha a conexão com o banco de dados
-$conn->close();
-?>
