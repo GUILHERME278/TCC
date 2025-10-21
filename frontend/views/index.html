@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rifa Online</title>
+    <title>Usuário</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="/TCC/frontend/css/usuario.css">
@@ -17,7 +17,7 @@
             <div class="flex flex-col md:flex-row justify-between items-center">
                 <img src="./img/2024_logo_55anos_cps_gov_24-25_regua_horizontal+horizontal_cor.png"
                     alt="Logo Etec Dep. Salim Sedeh" class="h-8 mr-2">
-                <h1 class="text-lg font-bold text-center">Ação entre amig   os</h1>
+                <h1 class="text-lg font-bold text-center">Ação entre amigos</h1>
                 <div class="text-xs">
                     <span class="hidden md:inline">Etec Deputado Salim Sedeh - Leme/SP</span>
                 </div>
@@ -30,30 +30,34 @@
         <!-- Coluna esquerda - Sidebar REDUZIDA -->
         <div class="lg:w-1/4 p-2 space-y-2">
             <!-- Cabeçalho da Rifa REDUZIDO -->
-            <div class="bg-white rounded-lg shadow-md p-3 fade-in border-t-2 border-etec-blue max-w-sm flex-shrink-0">
-                <h2 id="raffle-title" class="text-lg font-bold text-blue-700 mb-1">Rifa Beneficente</h2>
-                <p id="raffle-description" class="text-gray-700 mb-2 text-sm">Ajude nossa causa e concorra a prêmios
-                    incríveis!</p>
+            <div class="bg-white rounded-lg shadow-md p-6 fade-in border-t-2 border-etec-blue max-w-lg flex-shrink-0">
+                <h2 id="raffle-title" class="text-2xl font-bold text-blue-700 mb-3">
+                    Rifa Beneficente
+                </h2>
+                <p id="raffle-description" class="text-gray-700 mb-4 text-lg">
+                    Ajude nossa causa e concorra a prêmios incríveis!
+                </p>
 
-                <div class="grid grid-cols-1 gap-2 text-xs">
+                <div class="grid grid-cols-1 gap-4 text-base">
                     <p class="text-gray-600 flex items-center">
-                        <i class="fas fa-gift mr-1 text-blue-500 w-4 text-center text-xs"></i>
+                        <i class="fas fa-gift mr-3 text-blue-500 w-6 text-center"></i>
                         <span id="raffle-prize">Prêmio: Smartphone Novo</span>
                     </p>
                     <p class="text-gray-600 flex items-center">
-                        <i class="fas fa-ticket-alt mr-1 text-blue-500 w-4 text-center text-xs"></i>
+                        <i class="fas fa-ticket-alt mr-3 text-blue-500 w-6 text-center"></i>
                         <span id="total-numbers">Total de números: 100</span>
                     </p>
                     <p class="text-gray-600 flex items-center">
-                        <i class="fas fa-money-bill-wave mr-1 text-green-500 w-4 text-center text-xs"></i>
+                        <i class="fas fa-money-bill-wave mr-3 text-green-500 w-6 text-center"></i>
                         <span id="price-per-number">Valor por número: R$ 5,00</span>
                     </p>
                     <p class="text-gray-600 flex items-center">
-                        <i class="fas fa-user-lock mr-1 text-red-500 w-4 text-center text-xs"></i>
+                        <i class="fas fa-user-lock mr-3 text-red-500 w-6 text-center"></i>
                         <span id="max-per-person">Máximo por pessoa: 10 números</span>
                     </p>
                 </div>
             </div>
+
 
             <!-- Container da imagem REDUZIDO -->
             <div class="w-full h-40">
@@ -94,7 +98,7 @@
             <!-- Coluna Menor - Informações de Compra -->
             <div
                 class="w-80 bg-white rounded-lg shadow-md p-4 fade-in border-t-2 border-green-500 flex flex-col justify-between">
-                <div>
+                <div class="flex-grow">
                     <h4 class="text-lg font-semibold mb-4 text-gray-800 text-center">Sua Seleção</h4>
 
                     <!-- Valor total da seleção -->
@@ -102,29 +106,32 @@
                         <h5 class="font-medium text-blue-800 mb-2 text-sm">Valor total:</h5>
                         <p class="text-2xl font-bold text-blue-600"> <span id="total-price">0,00</span></p>
                     </div>
+
+                    <!-- Botões abaixo do valor total -->
+                    <div class="space-y-3 mb-6">
+                        <button id="add-to-cart"
+                            class="bg-blue-600 text-white px-4 py-3 rounded-md font-semibold hover:bg-blue-700 transition w-full disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm"
+                            disabled>
+                            <i class="fas fa-cart-plus"></i>
+                            Adicionar ao Carrinho
+                        </button>
+
+                        <button id="clear-selection"
+                            class="text-red-600 hover:text-red-800 disabled:opacity-50 disabled:cursor-not-allowed font-medium flex items-center justify-center gap-2 text-sm px-4 py-2 border border-red-300 rounded-md hover:bg-red-50 transition-colors w-full"
+                            disabled>
+                            <i class="fas fa-trash-alt text-xs"></i> Limpar seleção
+                        </button>
+                    </div>
                 </div>
 
-                <button id="clear-selection"
-                    class="text-red-600 hover:text-red-800 disabled:opacity-50 disabled:cursor-not-allowed font-medium flex items-center gap-2 text-sm px-4 py-2 border border-red-300 rounded-md hover:bg-red-50 transition-colors"
-                    disabled>
-                    <i class="fas fa-trash-alt text-xs"></i> Limpar seleção
-                </button>
-
-                <!-- No arquivo usuario_otimizado.html, adicione este botão próximo ao botão "Ver Carrinho" -->
-                <button id="openPurchasedNumbersModal"
-                    class="bg-purple-600 text-white px-4 py-3 rounded-md font-semibold hover:bg-purple-700 transition w-full flex items-center justify-center gap-2 text-sm">
+                <!-- Botões no final da coluna -->
+                <div class="space-y-3">
+                    <button id="openPurchasedNumbersModal"
+                    class="bg-[#003e7e] text-white px-4 py-3 rounded-md font-semibold hover:bg-[#0056b3] transition w-full flex items-center justify-center gap-2 text-sm">
                     <i class="fas fa-list-check"></i>
                     Números Comprados
                 </button>
-
-                <!-- Botões de ação -->
-                <div class="space-y-3">
-                    <button id="add-to-cart"
-                        class="bg-blue-600 text-white px-4 py-3 rounded-md font-semibold hover:bg-blue-700 transition w-full disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm"
-                        disabled>
-                        <i class="fas fa-cart-plus"></i>
-                        Adicionar ao Carrinho
-                    </button>
+                
 
                     <button id="openModalButton"
                         class="bg-green-600 text-white px-4 py-3 rounded-md font-semibold hover:bg-green-700 transition w-full flex items-center justify-center gap-2 text-sm">
@@ -181,7 +188,7 @@
                                 <tr class="border-t border-gray-300">
                                     <td class="py-3 px-4 font-semibold text-right text-gray-700" colspan="2">Total do
                                         Carrinho:</td>
-                                    <td class="py-3 px-4 font-bold text-right text-lg text-blue-700">R$ <span
+                                    <td class="py-3 px-4 font-bold text-right text-lg text-blue-700"> <span
                                             id="cart-total">0,00</span></td>
                                 </tr>
                             </tfoot>
@@ -198,8 +205,13 @@
                                 <label for="buyer-name" class="block text-sm font-medium text-gray-700 mb-1">Nome
                                     Completo
                                     <span class="text-red-500">*</span></label>
+<<<<<<< HEAD
                                 <input type="text" id="buyer-name" placeholder="Seu nome completo"
                                     maxlength="50" class=" comprador w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+=======
+                                <input type="text" id="buyer-name" placeholder="Seu nome completo" maxlength="70"
+                                    class=" comprador w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+>>>>>>> 236f1b6139df012f8b8bf3677bb4fd1f56df1161
                                     required>
                             </div>
                             <div>
@@ -219,12 +231,23 @@
                                     required>
                             </div>
                             <div>
+<<<<<<< HEAD
                                 <label for="buyer-email" type="email" name="email"
                                     class="block text-sm font-medium text-gray-700 mb-1">E-mail
                                 </label>
                                 <input type="email" id="buyer-email" placeholder="seuemail@exemplo.com"
                                     class=" comprador w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" required>
+=======
+                                <label for="buyer-email" class="block text-sm font-medium text-gray-700 mb-1">E-mail
+                                    <span class="text-red-500">*</span> <!-- Adiciona o asterisco -->
+                                </label>
+                                <input type="email" id="buyer-email" placeholder="seuemail@exemplo.com"
+                                    class=" comprador w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                    required> <!-- Adiciona o atributo required -->
+>>>>>>> 236f1b6139df012f8b8bf3677bb4fd1f56df1161
                             </div>
+
+
                         </div>
 
                         <!-- Botão de Finalizar Compra -->
@@ -250,6 +273,7 @@ class="fixed inset-0 bg-gray-900 bg-opacity-75 hidden flex justify-center items-
             class="text-gray-500 hover:text-red-600 text-2xl font-bold">&times;</button>
     </div>
 
+<<<<<<< HEAD
     <!-- Conteúdo (Scrollable) -->
     <div class="flex-grow overflow-y-auto pr-2">
         <!-- Filtros -->
@@ -272,9 +296,34 @@ class="fixed inset-0 bg-gray-900 bg-opacity-75 hidden flex justify-center items-
     </div>
 </div>
 </div>
+=======
+            <!-- Conteúdo (Scrollable) -->
+            <div class="flex-grow overflow-y-auto pr-2">
+                <!-- Filtros -->
+                <div class="mb-4 flex flex-col sm:flex-row gap-3">
+                    <input type="text" id="searchCPF" placeholder="Digite seu CPF"
+                        class="flex-1 p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                        maxlength="14" oninput="mascaraCPF(this)">
+                    <button id="searchButton"
+                        class="bg-[#003e7e] text-white px-4 py-2 rounded-md hover:bg-[#0056b3] transition">
+                        Buscar
+                    </button>
+                </div>
+
+                <!-- Resultados -->
+                <div id="purchasedNumbersResults" class="space-y-4">
+                    <div class="text-center text-gray-500 italic py-8">
+                        Informe seu CPF para visualizar seus números comprados
+
+                    </div>
+                </div>
+            </div>
+        </div>
+
+>>>>>>> 236f1b6139df012f8b8bf3677bb4fd1f56df1161
 
 
-    <script src="/TCC/frontend/js/usuario_otimizado.js"></script>
+        <script src="/TCC/frontend/js/usuario_otimizado.js"></script>
 </body>
 
 </html>

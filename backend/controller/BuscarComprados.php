@@ -1,4 +1,9 @@
 <?php
+//Esse arquivo serve para buscar os números que já foram comprados no banco de dados
+//e depois desabilitar esse números comprados no front
+
+
+
 include 'conexão.php';
 
 header('Content-Type: application/json'); // Garante que a resposta será JSON

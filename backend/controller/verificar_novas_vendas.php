@@ -1,5 +1,6 @@
 <?php
-// verificar_novas_vendas.php (Versão Única e Final)
+// verificar_novas_vendas.php (Versão com Descriptografia)
+// Este arquivo busca no banco as compras feitas e descriptografa os dados antes de retornar para o frontend
 
 include 'conexão.php';
 header('Content-Type: application/json');
@@ -47,20 +48,42 @@ if ($deve_buscar_dados) {
     
     $resultado_busca = mysqli_query($conn, $sql_busca);
     $vendas = [];
+    
     while ($row = mysqli_fetch_assoc($resultado_busca)) {
+        // Descriptografa os dados sensíveis
+        $cpf_descriptografado = decrypt_data($row['cpf']);
+        $telefone_descriptografado = decrypt_data($row['telefone']);
+        $email_descriptografado = $row['email'] ? decrypt_data($row['email']) : null;
+        
+        // Verifica se a descriptografia foi bem-sucedida
+        if ($cpf_descriptografado === null) {
+            // Se não conseguiu descriptografar, pode ser que o dado não esteja criptografado
+            // ou houve erro na descriptografia - mantém o valor original
+            $cpf_descriptografado = $row['cpf'];
+        }
+        
+        if ($telefone_descriptografado === null && !empty($row['telefone'])) {
+            $telefone_descriptografado = $row['telefone'];
+        }
+        
+        if ($email_descriptografado === null && !empty($row['email'])) {
+            $email_descriptografado = $row['email'];
+        }
+        
         $vendas[] = [
-            'id'           => $row['cpf'],
-            'cpf'          => $row['cpf'],
-            'name'         => $row['nome'],
-            'email'        => $row['email'] ? $row['email'] : 'Não informado',
-            'phone'        => $row['telefone'],
+            'id'           => $cpf_descriptografado,
+            'cpf'          => $cpf_descriptografado,
+            'name'         => $row['nome'], // Nome não é criptografado
+            'email'        => $email_descriptografado ? $email_descriptografado : 'Não informado',
+            'phone'        => $telefone_descriptografado,
             'numbers'      => $row['numeros_comprados'] ? explode(',', $row['numeros_comprados']) : [],
             'total_numbers' => (int)$row['total_numeros'],
             'status'       => 'pendente', // Status padrão, pode ser alterado conforme regra de negócio
             'date'         => date('d/m/Y') // Data atual como padrão
         ];
     }
-    // Envia a lista completa de vendas
+    
+    // Envia a lista completa de vendas com dados descriptografados
     echo json_encode(['novos_dados' => true, 'vendas' => $vendas]);
 } else {
     // Se não houver novas vendas, informa que não há novidades.
@@ -69,3 +92,4 @@ if ($deve_buscar_dados) {
 
 mysqli_close($conn);
 ?>
+

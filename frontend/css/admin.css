@@ -31,5 +31,9 @@
     color: #92400e;
 }
 
-/* CSS compartilhado entre as duas telas */
+.etec-gradient {
+    background: linear-gradient(135deg, #003e7e 0%, #0056b3 100%);
+}
+
+
 

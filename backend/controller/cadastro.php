@@ -1,4 +1,8 @@
 <?php
+
+
+//eses arquivo serve parar cadastrar os números comprados e os dados do comprador no banco 
+
 header('Content-Type: application/json');
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 
@@ -37,7 +41,11 @@ try {
         "INSERT INTO clientes (cpf, nome, telefone, email) VALUES (?, ?, ?, ?)
          ON DUPLICATE KEY UPDATE nome = VALUES(nome), telefone = VALUES(telefone), email = VALUES(email)"
     );
-    $stmt_cliente->bind_param("ssss", $cpf, $nome, $telefone, $email);
+    $cpf_encrypted = encrypt_data($cpf);
+    $telefone_encrypted = encrypt_data($telefone);
+    $email_encrypted = $email ? encrypt_data($email) : null;
+
+    $stmt_cliente->bind_param("ssss", $cpf_encrypted, $nome, $telefone_encrypted, $email_encrypted);
     $stmt_cliente->execute();
     $stmt_cliente->close();
 
@@ -46,7 +54,7 @@ try {
     foreach ($numeros_comprados as $numero) {
         $numero = trim($numero);
         if ($numero === '') continue;
-        $stmt_numero->bind_param("ss", $numero, $cpf);
+        $stmt_numero->bind_param("ss", $numero, $cpf_encrypted);
         $stmt_numero->execute();
     }
     $stmt_numero->close();
@@ -59,3 +67,7 @@ try {
 } finally {
     $conn->close();
 }
+
+
+
+
